@@ -76,6 +76,7 @@ Tong khong xac dinh: 25
  > **Cung cấp các macro sử dụng để kiểm tra điều kiện, nếu điều kiện sai(false), dừng chương trình và báo lỗi**
 
 > **#define NDEBUG để tắt debug**
+
 **Ví dụ: Tính tổng danh sách đối số biến đổi**
 <details><summary>Xem Code và giải thích</summary>
 <p>
