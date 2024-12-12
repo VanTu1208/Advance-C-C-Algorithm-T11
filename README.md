@@ -1,5 +1,7 @@
 # Advance-C-Cpp-Algorithm-T11
 ## Bài 2: STDARG - ASSERT
+<details><summary>Xem</summary>
+ 
 ### Thư viện STDARG
  > **Cung cấp các phương thức để làm việc với hàm có tham số đầu vào chưa xác định**
 
@@ -120,4 +122,5 @@ Assertion failed: b != 0 && "b bang 0", file main.c, line 8
 </p>
 </details>
 
+</details>
 
