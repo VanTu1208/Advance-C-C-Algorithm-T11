@@ -151,7 +151,7 @@ Thì ```y = x```
 
 **Kích thước của con trỏ** phụ thuộc vào **kiến trúc máy tính** và **trình biên dịch**. Ví dụ STM32 thì con trỏ có kích thước 32bits
 
-Ví dụ ```int *ptrA``` và ```char *ptrB``` đều có kích thước như nhau. **Khác nhau** là khi đọc dữ liệu từ địa chỉ của con trỏ sẽ đọc số byte bằng với kiểu dữ liệu của con trỏ đó. Như y = *ptrA, y sẽ là dữ liệu 2 byte sau địa chỉ của con trỏ
+Ví dụ ```int *ptrA``` và ```char *ptrB``` đều có kích thước như nhau. **Khác nhau** là khi đọc dữ liệu từ địa chỉ của con trỏ sẽ đọc số byte bằng với kiểu dữ liệu của con trỏ đó. Như y = *ptrA, y sẽ là dữ liệu 4 byte sau địa chỉ của con trỏ
 
 **Mảng** có các phần tử với địa chỉ liền kề với nhau, cách nhau số bit phụ thuộc vào kiểu dữ liệu của mảng. Mảng mặc định sẽ trỏ đến phần tử đầu tiên.
 
@@ -160,7 +160,7 @@ Ví dụ ```int *ptrA``` và ```char *ptrB``` đều có kích thước nh
 int *ptrA = A; // Lúc này ptrA trỏ tới A[0] ví dụ 0x02
 
 ```
-Thì ```prtA+1``` sẽ trỏ tới ```0x04```  tức trỏ tới ```A[1]``` hoặc ```prtA+2``` sẽ trỏ tới ```A[2]```
+Thì ```prtA+1``` sẽ trỏ tới ```0x06```  tức trỏ tới ```A[1]``` hoặc ```prtA+2``` sẽ trỏ tới ```A[2]```
 
 Muốn lấy giá trị ```A[2]``` tức là ```*(ptrA+2)```
 
