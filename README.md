@@ -479,6 +479,213 @@ Cú pháp: ``` int *ptr = NULL;```
 - Con trỏ cấp 2: ```**ptr1 = &ptr```
 </details>
 
+## Bài 6: BitMask  
+<details><summary>Xem</summary>
+ 
+- Bitmask là một kỹ thuật sử dụng các bit để lưu trữ và thao tác với các cờ (flags) hoặc trạng thái. Có thể sử dụng bitmask để đặt, xóa và kiểm tra trạng thái của các bit cụ thể trong một từ (word).
+
+- Bitmask thường được sử dụng để tối ưu hóa bộ nhớ, thực hiện các phép toán logic trên một cụm bit, và quản lý các trạng thái, quyền truy cập, hoặc các thuộc tính khác của một đối tượng.
+
+### Bitwise Operatiors
+![Bitwise](https://i.imgur.com/HZs7vbg.png)
+#### NOT: 
+- 0 thành 1, 1 thành 0
+- Cú pháp: ```~b``` 
+#### AND:
+- Khi tất cả intput bằng 1 thì output bằng 1, ngược lại bằng 0
+- Cú pháp: ```a&b```
+#### OR:
+- Khi có ít nhất một input bằng 1 thì output bằng 1, ngược lại bằng 0
+- Cú pháp: ```a|b```
+### XOR:
+- Khi có một ngõ vào khác các ngõ vào còn lại thì bằng 1, ngược lại bằng 0.
+- Cú pháp: ```a^b```
+#### Shift Left, Shift Right
+- Dùng để di chuyển bit sang trái hoặc sang phải.
+    - Trong trường hợp <<, các bit ở bên phải sẽ được dịch sang trái, và các bit trái cùng sẽ được đặt giá trị 0.
+    - Trong trường hợp >>, các bit ở bên trái sẽ được dịch sang phải, và các bit phải cùng sẽ được đặt giá trị 0 hoặc 1 tùy thuộc vào giá trị của bit cao nhất (bit dấu).
+
+
+**Ví dụ**
+```cpp
+#include <stdint.h>
+#include <stdio.h>
+
+int main(){
+
+    const uint8_t init  = 0b01001011; // 75
+    const uint8_t init1 = 0b01101001; // 105
+    
+    uint8_t notInit = ~init; //0b10110100: 180
+    printf("NOT: %d\n", notInit);
+    
+    uint8_t AND = init&init1; //0b01001001: 73  
+    printf("AND: %d\n", AND);
+
+    uint8_t OR = init|init1; //0b01101011: 107
+    printf("OR: %d\n", OR); 
+
+    uint8_t XOR = init^init1; //0b00100010: 34
+    printf("XOR: %d\n", XOR);
+
+    uint8_t shiftLeft = init<<3; //0b01011000: 88
+    printf("ShiftLeft 3 bit Init: %d\n", shiftLeft);
+
+    uint8_t shiftRight = init>>4 ; //0b00000100: 4
+    printf("ShiftRight 4 bit Init: %d\n", shiftRight);
+
+
+    return 0;
+}
+```
+Kết quả:
+```
+NOT: 180
+AND: 73
+OR: 107
+XOR: 34
+ShiftLeft 3 bit Init: 88
+ShiftRight 4 bit Init: 4
+```
+**Ví dụ sử dụng bitmask**
+```cpp
+#define GENDER        1 << 0  //0000 0001
+#define TSHIRT        1 << 1  //0000 0010
+#define HAT           1 << 2  //0000 0100
+#define SHOES         1 << 3  //0000 1000
+
+#define FEATURE1      1 << 4  // Bit 4: Tính năng 1
+#define FEATURE2      1 << 5  // Bit 5: Tính năng 2
+#define FEATURE3      1 << 6  // Bit 6: Tính năng 3
+#define FEATURE4      1 << 7  // Bit 7: Tính năng 4
+```
+Thay vì khai báo mỗi đối tượng với kiểu uint8_t sẽ mất 4 bytes thì ta chỉ cần khai báo 8 đối tượng mà chỉ mất 1 byte.
+- Hàm bật một bit:
+```cpp
+void enableFeature(uint8_t *features, uint8_t change) {
+    *features |= change;
+}
+```
+- Giả sử ta có 
+```
+features:    10001000
+change  :    00000100
+______________________
+features:    10001100
+```
+- Như ví dụ trên, ta chỉ cần bật bit 2 và sử dụng phép OR để khi ```feature|change``` thì bit tại vị trí cần bật lên sẽ luôn bằng 1. Và những bit tại ví trị khác của ```features``` OR với bit 0 của ```change``` sẽ luôn là chính nó (Không làm thay đổi các bit khác).
+
+- Hàm tắt một bit:
+```cpp
+void disableFeature(uint8_t *features, uint8_t change) {
+    *features &= ~change;
+}
+```
+- Giả sử ta có  ```change: 00000010``` thì ```~change=11111101```
+Kết quả:
+```
+features:    10001010
+change  :    11111101
+______________________
+features:    10001000
+```
+Phép AND với 1 sẽ tắt bit của features tại vị trí bit 0 của change và các vị trí khác sẽ không đổi.
+
+- Hàm đọc giá trị một bit
+```cpp
+int isFeatureEnabled(uint8_t features, uint8_t change) {
+    return (features & change) != 0;
+}
+```
+Giả sử ta muốn kiểm tra bit 5
+```
+features:    10001010
+change  :    00100000
+______________________
+features:    00000000
+```
+Ta sẽ AND biến cần kiểm tra với mặt nạ mạng có giá trị 0 ở tất cả các bit (Kết quả luôn bằng 0) ngoại trừ vị trí cần kiểm tra sẽ có bit 1, nếu bit tại đó bằng 1 thì kết quả bằng 1, ngược lại bằng 0.
+Cả hai hàm bật/tắt bit trên sẽ truyền vào con trỏ để xác định được vị trí đang lưu của đổi tượng cần thay đổi bit. Nhưng với hàm đọc chúng ta chỉ cần biết giá trị chứ không cần đổi nên sẽ truyền vào tham số là một biến bình thường. Lúc này, biến sẽ được khởi tạo ở một địa chỉ khác và không thay đổi giá trị của biến gốc.
+
+Full Code:
+```cpp
+#include <stdio.h>
+#include <stdint.h>
+
+
+#define GENDER        1 << 0  // Bit 0: Giới tính (0 = Nữ, 1 = Nam)
+#define TSHIRT        1 << 1  // Bit 1: Áo thun (0 = Không, 1 = Có)
+#define HAT           1 << 2  // Bit 2: Nón (0 = Không, 1 = Có)
+#define SHOES         1 << 3  // Bit 3: Giày (0 = Không, 1 = Có)
+// Tự thêm tính năng khác
+#define FEATURE1      1 << 4  // Bit 4: Tính năng 1
+#define FEATURE2      1 << 5  // Bit 5: Tính năng 2
+#define FEATURE3      1 << 6  // Bit 6: Tính năng 3
+#define FEATURE4      1 << 7  // Bit 7: Tính năng 4
+
+void enableFeature(uint8_t *features, uint8_t feature) {
+    *features |= feature;
+}
+
+void disableFeature(uint8_t *features, uint8_t feature) {
+    *features &= ~feature;
+}
+
+
+int isFeatureEnabled(uint8_t features, uint8_t feature) {
+    return (features & feature) != 0;
+}
+
+void listSelectedFeatures(uint8_t features) {
+    printf("Selected Features:\n");
+
+    if (isFeatureEnabled(features, GENDER)) {
+        printf("- Gender\n");
+    }
+    if (isFeatureEnabled(features, TSHIRT)) {
+        printf("- T-Shirt\n");
+    }
+    if (isFeatureEnabled(features, HAT)) {
+        printf("- Hat\n");
+    }
+    if (isFeatureEnabled(features, SHOES)) {
+        printf("- Shoes\n");
+    }
+    printf("Feature Binary:\n");
+    for (int i = 7; i >= 0 ; i--)
+    {
+        printf("%d", (features >> i) & 1);
+    }
+}
+
+int main() {
+    uint8_t options = 0;
+
+    // Thêm tính năng 
+    enableFeature(&options, GENDER | TSHIRT | HAT);
+
+    disableFeature(&options, TSHIRT);
+
+    // Liệt kê các tính năng đã chọn
+    listSelectedFeatures(options);
+    
+    return 0;
+}
+
+```
+
+Kết quả:
+```
+Selected Features:
+- Gender
+- Hat
+Feature Binary:
+00000101
+```
+Tại hàm main ta bật 3 bit ```GENDER | TSHIRT | HAT``` sau đó tắt một bit ```TSHIRT```, nên sẽ chỉ còn 2 bit được bật tại vị trí 0 và 2 như ta đã khai báo ở đầu.
+
+
+</details>
     
 
 
