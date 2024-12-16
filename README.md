@@ -124,7 +124,6 @@ Assertion failed: b != 0 && "b bang 0", file main.c, line 8
 
 </details>
 
-# Advance-C-Cpp-Algorithm-T11
 ## Bài 3: POINTER
 <details><summary>Xem</summary>
  
