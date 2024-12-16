@@ -686,6 +686,232 @@ Tại hàm main ta bật 3 bit ```GENDER | TSHIRT | HAT``` sau đó tắt m�
 
 </details>
     
+## Bài 5: goto & setjmp 
+<details><summary>Xem</summary>
+ 
+### 1. goto
+goto là một từ khóa trong ngôn ngữ lập trình C, cho phép chương trình nhảy đến một nhãn (label) đã được đặt trước đó **trong cùng một hàm**. 
+
+Mặc dù nó cung cấp khả năng kiểm soát flow của chương trình, nhưng việc sử dụng goto thường được xem là không tốt vì nó có thể làm cho mã nguồn trở nên khó đọc và khó bảo trì.
+
+Cú pháp: 
+```cpp
+label:
+...
+goto label;
+```
+Ví dụ:
+```cpp
+#include <stdio.h>
+
+int main()
+{
+    int i = 0;
+// Đặt nhãn
+start:
+    printf("%d ", i);
+    i++;
+    if (i < 5)
+    {
+        goto start; // Chuyển control đến nhãn "end"
+    }
+    return 0;
+}
+
+```
+Ở ví dụ trên: chúng ta sẽ cho đếm i tăng dần, nếu i < 5 thì nhảy đến nhãn ```start``` và tiếp tục đếm. Nếu i >= 5 thì bỏ qua lệnh nhảy và kết thúc chương trình  
+Kết quả
+```
+0 1 2 3 4 
+```
+Trong trường hợp có nhiều vòng lặp chồng lên nhau:
+```cpp
+while(1){
+    for(){
+        for(){
+            if(){
+                break;
+            }
+        break;
+        }
+    break;
+    }
+}
+```
+Việc thoát khỏi hàm ```while(1)``` ngoài cùng ngay lập tức cần phải có nhiều hàm ```break``` ở ```if()``` và các vòng ```for()``` Nhưng ta chỉ cần một lệnh ```goto``` là có thể thoát khỏi ```while(1) ```này:
+```cpp
+while(1){
+    for(){
+        for(){
+            if(){
+                goto out;
+            }
+        }
+    }
+}
+out:
+```
+
+### 2. setjmp.h
+- setjmp.h là một thư viện trong ngôn ngữ lập trình C, cung cấp hai hàm chính là setjmp và longjmp. Cả hai hàm này thường được sử dụng để thực hiện xử lý ngoại lệ trong C.
+- Nhưng nó không phải là một cách tiêu biểu để xử lý ngoại lệ trong ngôn ngữ này.
+
+**Ví dụ**
+```cpp
+#include <stdio.h>
+#include <setjmp.h>
+
+jmp_buf buf;
+int exception_code;
+
+#define TRY if ((exception_code = setjmp(buf)) == 0) 
+#define CATCH(x) else if (exception_code == (x)) 
+#define THROW(x) longjmp(buf, (x))
+
+
+double divide(int a, int b) {
+    if (b == 0) {
+        THROW(1); // Mã lỗi 1 cho lỗi chia cho 0
+    }
+    return (double)a / b;
+}
+
+int main() {
+    int a = 10;
+    int b = 0;
+    double result = 0.0;
+
+    TRY {
+        result = divide(a, b);
+        printf("Result: %f\n", result);
+    } CATCH(1) {
+        printf("Error: Divide by 0!\n");
+    }
+
+
+    // Các xử lý khác của chương trình
+    return 0;
+}
+```
+- Biến ```jmp_buf buf;``` có chức năng lưu trạng thái hiện tại của chương trình
+- Hàm ```setjmp(buf)``` khi lần đầu được gọi, mặc định sẽ bằng 0
+- Hàm ```longjmp(buf,value)``` sẽ nhảy về địa chỉ được gọi ```setjmp(buf)``` và đặt hàm này thành giá trị ```value```
+
+Ví dụ:
+```cpp
+#include <stdio.h>
+#include <setjmp.h>
+
+jmp_buf buf;
+
+int main(){
+    int i = 2;
+    printf("exception = ");
+    int exception = setjmp(buf);
+    printf("%d ",exception);
+
+    if(exception < 10){
+        i+= 2;
+        longjmp(buf,i);
+    }
+    return 0;
+}
+```
+- Khi lần đầu được gọi ```int exception = setjmp(buf)```; thì biến ```exception = 0```.
+- Sau đó hàm ```longjmp(buf,i)``` sẽ được gọi nếu ```exception < 10``` nên ```longjmp``` sẽ được gọi lần lượt với i là 4,6,8 (i được khởi tạo là 2 và bắt đầu gọi với giá trị ```i+2```).
+Kết quả:
+```
+exception = 0 4 6 8
+```
+**Hàm longjmp **không được** truyền vào tham số giá trị bằng 0
+
+#### Sử dụng setjmp cho xử lý ngoại lệ
+Ví dụ:
+```cpp
+#include <stdio.h>
+#include <setjmp.h>
+
+jmp_buf buf;
+int exception_code;
+
+#define TRY if ((exception_code = setjmp(buf)) == 0) 
+#define CATCH(x) else if (exception_code == (x)) 
+#define THROW(x) longjmp(buf, (x))
+
+
+double divide(int a, int b) {
+    if (b == 0) {
+        THROW(1); // Mã lỗi 1 cho lỗi chia cho 0
+    }
+    return (double)a / b;
+}
+
+int main() {
+    int a = 10;
+    int b = 0;
+    double result = 0.0;
+
+    TRY {
+        result = divide(a, b);
+        printf("Result: %f\n", result);
+    } CATCH(1) {
+        printf("Error: Divide by 0!\n");
+    }
+
+
+    // Các xử lý khác của chương trình
+    return 0;
+}
+```
+Tại định nghĩa  
+```cpp
+#define TRY if ((exception_code = setjmp(buf)) == 0) 
+```
+sẽ gán giá trị của ```exception_code``` bằng với ```setjmp(buf)``` và kiểm tra điều kiện bằng 0 để thực thi khối TRY
+
+Định nghĩa: 
+```cpp
+#define CATCH(x) else if (exception_code == (x)) 
+```
+Nếu khối TRY xảy ra lỗi thì thực thi hàm CATCH và kiểm tra điều kiện```exception_code == x``` và thực thi
+
+Định nghĩa
+```cpp
+#define THROW(x) longjmp(buf, (x))
+```
+Khi gặp THROW chương trình sẽ ngừng thực thi khối TRY, gọi hàm longjmp(buf, (x)) và chuyển sang khối CATCH.
+
+Hàm chia hai số
+```cpp
+double divide(int a, int b) {
+    if (b == 0) {
+        THROW(1); // Mã lỗi 1 cho lỗi chia cho 0
+    }
+    return (double)a / b;
+}
+```
+Kiểm tra nếu mẫu bằng 0 thì xảy ra ngoại lệ và gọi THROW(1) để nhảy về setjmp(buf) đồng thời set exception = 1.
+
+Tại hàm main:
+```cpp
+TRY {
+    result = divide(a, b);
+    printf("Result: %f\n", result);
+} CATCH(1) {
+    printf("Error: Divide by 0!\n");
+}
+```
+Khi thực thi khối TRY mà mẫu bằng 0 thì sẽ chạy khối CATCH và in ra lỗi
+Kết quả:
+```
+Error: Divide by 0!
+```
+
+ASSERT cũng có chức năng xử lý lỗi nhưng khi phát hiện lỗi thì ASSERT dừng chương trình và in ra lỗi trong khi đó thì TRY, CATCH vẫn tiếp tục thực thi chương trình.
+</details>
+
+
+
 
 
 
