@@ -910,6 +910,185 @@ Error: Divide by 0!
 ASSERT cũng có chức năng xử lý lỗi nhưng khi phát hiện lỗi thì ASSERT dừng chương trình và in ra lỗi trong khi đó thì TRY, CATCH vẫn tiếp tục thực thi chương trình.
 </details>
 
+## Bài 5: Extern - Static - Volatile - Register
+<details><summary>Xem</summary>
+
+### Extern
+- Extern được sử dụng để thông báo rằng một biến hoặc hàm đã được khai báo ở một nơi khác trong chương trình hoặc trong một file nguồn khác. Điều này giúp chương trình hiểu rằng biến hoặc hàm đã được định nghĩa và sẽ được sử dụng từ một vị trí khác, giúp quản lý sự liên kết giữa các phần khác nhau của chương trình hoặc giữa các file nguồn.
+
+- Chỉ được khai báo chứ không được phép định nghĩa hay gán giá trị. Cú pháp: ```extern int A; ```
+
+- Các hàm có thể không cần sử dụng Extern nhưng File khác vẫn có thể sử dụng được bình thường.
+
+- Các File phải liên kết với nhau theo lệnh:   
+```gcc main.c File1.c File2.c -o main```: Liên kết ba file .c và tạo ra file main.exe
+
+Ví dụ:  
+File1.h
+```cpp
+#ifndef FILE1_H
+#define FILE1_H
+
+#include <stdio.h>
+
+extern int externVariable;
+
+int add(int a, int b);
+
+#endif
+```
+File1.c
+```cpp
+#include "File1.h"
+
+int externVariable = 20;
+
+int add(int a, int b){
+    return a + b;
+}
+
+```
+main.c
+```cpp
+#include <stdio.h>
+#include "File1.h"
+
+int main(){
+    
+    printf("Extern Variable: %d\n",externVariable); 
+
+    int result = add(3,5);
+    print("Result: %d\n", result)
+    
+    return 0;
+}
+```
+Kết quả:
+```
+Extern Variable: 20
+Result: 8
+```
+
+### Static
+#### Static Global
+Khi static được sử dụng với global variables ( biến toàn cục - khai báo biến bên ngoài hàm), nó hạn chế phạm vi của biến đó **chỉ trong file nguồn hiện tại**. Ví dụ file File1.c sử dụng ```static int x = 2;``` thì file main.c không thể nào truy cập được. Tượng tự đối với các Static Function.  
+**Ứng dụng**: dùng để thiết kế các file thư viện, tránh việc sử dụng các hàm ở những File khác gây lỗi thư viện.
+
+#### Static Local
+Ví dụ:
+```cpp
+#include <stdio.h>
+
+void count(void){
+    int x = 2;
+    printf("Tang x len 1: %d\n",x++);
+}
+
+int main(){
+    
+    count();
+    count();
+    count();
+    
+    return 0;
+}
+```
+Tại hàm ```count()``` ta khai báo biến cục bộ ```int x = 2```, với mỗi lần gọi hàm, trình biên dịch sẽ khởi tạo cho biến x một địa chỉ trong bộ nhớ Stack và khi kêt thúc hàm sẽ thu hồi lại địa chỉ này. Sau đó lại cấp một địa chỉ mới có thể trùng địa chỉ cũ khi gọi lại hàm một lần nữa. Vì thế giá trị của x mỗi khi gọi hàm sẽ luôn bằng 2 và không tăng  
+Kết quả:
+```
+Tang x len 1: 2
+Tang x len 1: 2
+Tang x len 1: 2
+```
+Để khắc phục lỗi này ta sẽ sử dụng biến kiểu static local.
+Khi static được sử dụng với local variables (biến cục bộ - khai báo biến trong một hàm), nó giữ giá trị của biến qua các lần gọi hàm và giữ phạm vi của biến chỉ trong hàm đó.  
+
+Thay đổi hàm ```count();```
+```cpp
+void count(void){
+    static int x = 2;
+    printf("Tang x len 1: %d\n",x++);
+}
+```
+Ta sẽ khai báo biến x là biến static cục bộ. Khi lần đầu gọi hàm, trình biên dịch sẽ khởi tạo địa chỉ cho biến x này và sẽ luôn giữ giá trị xuyên suốt chương trình, khi kết thúc một lần gọi hàm hàm x sẽ được cộng lên 1. Với lần thứ 2 trở đi, khi gọi hàm trình biên dịch sẽ bỏ qua lệnh khai báo biến và trực tiếp thực thi lệnh ```printf``` và ```x++``` 
+Kết quả:
+```
+Tang x len 1: 2
+Tang x len 1: 3
+Tang x len 1: 4
+```
+#### Static trong Class
+Khi một thành viên của lớp được khai báo là static, nó thuộc về lớp chứ không thuộc về các đối tượng cụ thể của lớp đó. Các đối tượng của lớp sẽ chia sẻ cùng một bản sao của thành viên static, và nó có thể được truy cập mà không cần tạo đối tượng. Nó thường được sử dụng để lưu trữ dữ liệu chung của tất cả đối tượng.
+
+### Volatile
+Từ khóa volatile trong ngôn ngữ lập trình C được sử dụng để báo hiệu cho trình biên dịch rằng một biến có thể thay đổi ngẫu nhiên, ngoài sự kiểm soát của chương trình. Việc này ngăn chặn trình biên dịch tối ưu hóa hoặc xóa bỏ các thao tác trên biến đó, giữ cho các thao tác trên biến được thực hiện như đã được định nghĩa.
+
+Nghĩa là trình biên dịch không có quyền xóa biến kiểu Volatile mặc dù biến này không thực thi bất kỳ công việc hoặc thay đổi nào.
+
+Ví dụ: Khi một biến chứa giá trị Sensor có điều kiện không thay đổi. Với một biến bình thường, trình biên dịch sẽ xem xét và tối ưu hóa biến này làm cho sensor không thể cập nhật giá trị. Nhưng với một biến Volatile sẽ không bị trình biên dịch xóa và luôn có thể active.
+
+### Register
+
+Đối với một cấu trúc xử lý bình thường sẽ có luồng dữ liệu như sau:
+![Luồng](https://i.imgur.com/soZieSR.png)
+- Khi khai báo một biến ```int i = 5```, trình biên dịch sẽ cấp phát một địa chỉ trong RAM để chưa i. 
+- Khi muốn xử lý giá trị i, ví dụ cộng lên một. RAM sẽ đẩy giá trị i đến một thanh ghi nào đó và gửi phép cộng một đến một thanh ghi khác.
+- Sau đó hai thanh ghi này sẽ được truyền vào khối ALU (Arithmetic Logic Unit - Khối xử lý những phép toán logic trong vi điều khiển) để xử lý phép cộng này. 
+- Sau đó kết quả sẽ được truyền lại thanh ghi và cuối cùng sẽ gán vào địa chỉ của biến i trong RAM 
+
+Việc này sẽ mất nhiều tài nguyên khi xử lý những biến thường xuyên thay đổi giá trị.
+
+**Hạn chế**
+- Với từ khóa Register, biến được khởi tạo sẽ không có địa chỉ, sẽ làm giảm tính linh hoạt của biến. Nên không thể khai báo ở biến toàn cục (có nhiều hàm sẽ truy cập)
+- Số thanh ghi trong vi điều khiển là giới hạn. Khi khai báo biến toàn cục thì sẽ luôn lưu biến tại vị trí thanh ghi đó, làm mất một ô thanh ghi. Làm giảm tính linh hoạt của thanh ghi.
+Trong ngôn ngữ lập trình C, từ khóa register được sử dụng để chỉ ra ý muốn của lập trình viên rằng một biến được sử dụng thường xuyên và có thể được lưu trữ trong một thanh ghi máy tính, chứ không phải trong bộ nhớ RAM. Việc này nhằm tăng tốc độ truy cập. 
+
+Tuy nhiên, lưu ý rằng việc sử dụng register chỉ là một đề xuất cho trình biên dịch và không đảm bảo rằng biến sẽ được lưu trữ trong thanh ghi. Trong thực tế, trình biên dịch có thể quyết định **không** tuân thủ lời đề xuất này.  
+**Ví dụ:**
+```cpp
+#include <stdio.h>
+#include <time.h>
+
+int main() {
+    // Lưu thời điểm bắt đầu
+    clock_t start_time = clock();
+    int i;
+
+    // Đoạn mã của chương trình
+    for (i = 0; i < 2000000; ++i) {
+        // Thực hiện một số công việc bất kỳ
+    }
+
+    // Lưu thời điểm kết thúc
+    clock_t end_time = clock();
+
+    // Tính thời gian chạy bằng miligiây
+    double time_taken = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
+
+    printf("Thoi gian chay cua chuong trinh: %f giay\n", time_taken);
+
+    return 0;
+}
+
+```
+Chương trình trên với chức năng in ra màn hình thời gian thực thi hàm for đếm 2.000.0000 lần. Nó sẽ lấy thời gian trước khi thực thi và thời gian sau khi thực thi bằng hàm ```clock()``` cung cấp bởi thư viện ```time.h```. Và tính tổng số thời gian thực hiện của vòng lặp for.
+Với đoạn mã trên, ta khai báo biến i theo cách cơ bản thì sẽ thực thi với thời gian lâu hơn
+Kết quả:
+```
+Thoi gian chay cua chuong trinh: 0.006000 giay
+```
+
+Và khi ta đổi biến i thành kiểu ```register int i;``` thì thời gian được rút ngắn đáng kể
+Kết quả:
+```
+Thoi gian chay cua chuong trinh: 0.001000 giay
+```
+
+
+
+
+
+</details>
 
 
 
