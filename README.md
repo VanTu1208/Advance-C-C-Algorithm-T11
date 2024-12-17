@@ -478,211 +478,179 @@ Cú pháp: ``` int *ptr = NULL;```
 - Con trỏ cấp 2: ```**ptr1 = &ptr```
 </details>
 
-## Bài 6: BitMask  
+## Bài 4: Extern - Static - Volatile - Register
 <details><summary>Xem</summary>
- 
-- Bitmask là một kỹ thuật sử dụng các bit để lưu trữ và thao tác với các cờ (flags) hoặc trạng thái. Có thể sử dụng bitmask để đặt, xóa và kiểm tra trạng thái của các bit cụ thể trong một từ (word).
 
-- Bitmask thường được sử dụng để tối ưu hóa bộ nhớ, thực hiện các phép toán logic trên một cụm bit, và quản lý các trạng thái, quyền truy cập, hoặc các thuộc tính khác của một đối tượng.
+### Extern
+- Extern được sử dụng để thông báo rằng một biến hoặc hàm đã được khai báo ở một nơi khác trong chương trình hoặc trong một file nguồn khác. Điều này giúp chương trình hiểu rằng biến hoặc hàm đã được định nghĩa và sẽ được sử dụng từ một vị trí khác, giúp quản lý sự liên kết giữa các phần khác nhau của chương trình hoặc giữa các file nguồn.
 
-### Bitwise Operatiors
-![Bitwise](https://i.imgur.com/HZs7vbg.png)
-#### NOT: 
-- 0 thành 1, 1 thành 0
-- Cú pháp: ```~b``` 
-#### AND:
-- Khi tất cả intput bằng 1 thì output bằng 1, ngược lại bằng 0
-- Cú pháp: ```a&b```
-#### OR:
-- Khi có ít nhất một input bằng 1 thì output bằng 1, ngược lại bằng 0
-- Cú pháp: ```a|b```
-### XOR:
-- Khi có một ngõ vào khác các ngõ vào còn lại thì bằng 1, ngược lại bằng 0.
-- Cú pháp: ```a^b```
-#### Shift Left, Shift Right
-- Dùng để di chuyển bit sang trái hoặc sang phải.
-    - Trong trường hợp <<, các bit ở bên phải sẽ được dịch sang trái, và các bit trái cùng sẽ được đặt giá trị 0.
-    - Trong trường hợp >>, các bit ở bên trái sẽ được dịch sang phải, và các bit phải cùng sẽ được đặt giá trị 0 hoặc 1 tùy thuộc vào giá trị của bit cao nhất (bit dấu).
+- Chỉ được khai báo chứ không được phép định nghĩa hay gán giá trị. Cú pháp: ```extern int A; ```
 
+- Các hàm có thể không cần sử dụng Extern nhưng File khác vẫn có thể sử dụng được bình thường.
 
-**Ví dụ**
+- Các File phải liên kết với nhau theo lệnh:   
+```gcc main.c File1.c File2.c -o main```: Liên kết ba file .c và tạo ra file main.exe
+
+Ví dụ:  
+File1.h
 ```cpp
-#include <stdint.h>
+#ifndef FILE1_H
+#define FILE1_H
+
 #include <stdio.h>
+
+extern int externVariable;
+
+int add(int a, int b);
+
+#endif
+```
+File1.c
+```cpp
+#include "File1.h"
+
+int externVariable = 20;
+
+int add(int a, int b){
+    return a + b;
+}
+
+```
+main.c
+```cpp
+#include <stdio.h>
+#include "File1.h"
 
 int main(){
-
-    const uint8_t init  = 0b01001011; // 75
-    const uint8_t init1 = 0b01101001; // 105
     
-    uint8_t notInit = ~init; //0b10110100: 180
-    printf("NOT: %d\n", notInit);
+    printf("Extern Variable: %d\n",externVariable); 
+
+    int result = add(3,5);
+    print("Result: %d\n", result)
     
-    uint8_t AND = init&init1; //0b01001001: 73  
-    printf("AND: %d\n", AND);
-
-    uint8_t OR = init|init1; //0b01101011: 107
-    printf("OR: %d\n", OR); 
-
-    uint8_t XOR = init^init1; //0b00100010: 34
-    printf("XOR: %d\n", XOR);
-
-    uint8_t shiftLeft = init<<3; //0b01011000: 88
-    printf("ShiftLeft 3 bit Init: %d\n", shiftLeft);
-
-    uint8_t shiftRight = init>>4 ; //0b00000100: 4
-    printf("ShiftRight 4 bit Init: %d\n", shiftRight);
-
-
     return 0;
 }
 ```
 Kết quả:
 ```
-NOT: 180
-AND: 73
-OR: 107
-XOR: 34
-ShiftLeft 3 bit Init: 88
-ShiftRight 4 bit Init: 4
+Extern Variable: 20
+Result: 8
 ```
-**Ví dụ sử dụng bitmask**
-```cpp
-#define GENDER        1 << 0  //0000 0001
-#define TSHIRT        1 << 1  //0000 0010
-#define HAT           1 << 2  //0000 0100
-#define SHOES         1 << 3  //0000 1000
 
-#define FEATURE1      1 << 4  // Bit 4: Tính năng 1
-#define FEATURE2      1 << 5  // Bit 5: Tính năng 2
-#define FEATURE3      1 << 6  // Bit 6: Tính năng 3
-#define FEATURE4      1 << 7  // Bit 7: Tính năng 4
-```
-Thay vì khai báo mỗi đối tượng với kiểu uint8_t sẽ mất 4 bytes thì ta chỉ cần khai báo 8 đối tượng mà chỉ mất 1 byte.
-- Hàm bật một bit:
-```cpp
-void enableFeature(uint8_t *features, uint8_t change) {
-    *features |= change;
-}
-```
-- Giả sử ta có 
-```
-features:    10001000
-change  :    00000100
-______________________
-features:    10001100
-```
-- Như ví dụ trên, ta chỉ cần bật bit 2 và sử dụng phép OR để khi ```feature|change``` thì bit tại vị trí cần bật lên sẽ luôn bằng 1. Và những bit tại ví trị khác của ```features``` OR với bit 0 của ```change``` sẽ luôn là chính nó (Không làm thay đổi các bit khác).
+### Static
+#### Static Global
+Khi static được sử dụng với global variables ( biến toàn cục - khai báo biến bên ngoài hàm), nó hạn chế phạm vi của biến đó **chỉ trong file nguồn hiện tại**. Ví dụ file File1.c sử dụng ```static int x = 2;``` thì file main.c không thể nào truy cập được. Tượng tự đối với các Static Function.  
+**Ứng dụng**: dùng để thiết kế các file thư viện, tránh việc sử dụng các hàm ở những File khác gây lỗi thư viện.
 
-- Hàm tắt một bit:
-```cpp
-void disableFeature(uint8_t *features, uint8_t change) {
-    *features &= ~change;
-}
-```
-- Giả sử ta có  ```change: 00000010``` thì ```~change=11111101```
-Kết quả:
-```
-features:    10001010
-change  :    11111101
-______________________
-features:    10001000
-```
-Phép AND với 1 sẽ tắt bit của features tại vị trí bit 0 của change và các vị trí khác sẽ không đổi.
-
-- Hàm đọc giá trị một bit
-```cpp
-int isFeatureEnabled(uint8_t features, uint8_t change) {
-    return (features & change) != 0;
-}
-```
-Giả sử ta muốn kiểm tra bit 5
-```
-features:    10001010
-change  :    00100000
-______________________
-features:    00000000
-```
-Ta sẽ AND biến cần kiểm tra với mặt nạ mạng có giá trị 0 ở tất cả các bit (Kết quả luôn bằng 0) ngoại trừ vị trí cần kiểm tra sẽ có bit 1, nếu bit tại đó bằng 1 thì kết quả bằng 1, ngược lại bằng 0.
-Cả hai hàm bật/tắt bit trên sẽ truyền vào con trỏ để xác định được vị trí đang lưu của đổi tượng cần thay đổi bit. Nhưng với hàm đọc chúng ta chỉ cần biết giá trị chứ không cần đổi nên sẽ truyền vào tham số là một biến bình thường. Lúc này, biến sẽ được khởi tạo ở một địa chỉ khác và không thay đổi giá trị của biến gốc.
-
-Full Code:
+#### Static Local
+Ví dụ:
 ```cpp
 #include <stdio.h>
-#include <stdint.h>
 
-
-#define GENDER        1 << 0  // Bit 0: Giới tính (0 = Nữ, 1 = Nam)
-#define TSHIRT        1 << 1  // Bit 1: Áo thun (0 = Không, 1 = Có)
-#define HAT           1 << 2  // Bit 2: Nón (0 = Không, 1 = Có)
-#define SHOES         1 << 3  // Bit 3: Giày (0 = Không, 1 = Có)
-// Tự thêm tính năng khác
-#define FEATURE1      1 << 4  // Bit 4: Tính năng 1
-#define FEATURE2      1 << 5  // Bit 5: Tính năng 2
-#define FEATURE3      1 << 6  // Bit 6: Tính năng 3
-#define FEATURE4      1 << 7  // Bit 7: Tính năng 4
-
-void enableFeature(uint8_t *features, uint8_t feature) {
-    *features |= feature;
+void count(void){
+    int x = 2;
+    printf("Tang x len 1: %d\n",x++);
 }
 
-void disableFeature(uint8_t *features, uint8_t feature) {
-    *features &= ~feature;
+int main(){
+    
+    count();
+    count();
+    count();
+    
+    return 0;
 }
+```
+Tại hàm ```count()``` ta khai báo biến cục bộ ```int x = 2```, với mỗi lần gọi hàm, trình biên dịch sẽ khởi tạo cho biến x một địa chỉ trong bộ nhớ Stack và khi kêt thúc hàm sẽ thu hồi lại địa chỉ này. Sau đó lại cấp một địa chỉ mới có thể trùng địa chỉ cũ khi gọi lại hàm một lần nữa. Vì thế giá trị của x mỗi khi gọi hàm sẽ luôn bằng 2 và không tăng  
+Kết quả:
+```
+Tang x len 1: 2
+Tang x len 1: 2
+Tang x len 1: 2
+```
+Để khắc phục lỗi này ta sẽ sử dụng biến kiểu static local.
+Khi static được sử dụng với local variables (biến cục bộ - khai báo biến trong một hàm), nó giữ giá trị của biến qua các lần gọi hàm và giữ phạm vi của biến chỉ trong hàm đó.  
 
-
-int isFeatureEnabled(uint8_t features, uint8_t feature) {
-    return (features & feature) != 0;
+Thay đổi hàm ```count();```
+```cpp
+void count(void){
+    static int x = 2;
+    printf("Tang x len 1: %d\n",x++);
 }
+```
+Ta sẽ khai báo biến x là biến static cục bộ. Khi lần đầu gọi hàm, trình biên dịch sẽ khởi tạo địa chỉ cho biến x này và sẽ luôn giữ giá trị xuyên suốt chương trình, khi kết thúc một lần gọi hàm hàm x sẽ được cộng lên 1. Với lần thứ 2 trở đi, khi gọi hàm trình biên dịch sẽ bỏ qua lệnh khai báo biến và trực tiếp thực thi lệnh ```printf``` và ```x++``` 
+Kết quả:
+```
+Tang x len 1: 2
+Tang x len 1: 3
+Tang x len 1: 4
+```
+#### Static trong Class
+Khi một thành viên của lớp được khai báo là static, nó thuộc về lớp chứ không thuộc về các đối tượng cụ thể của lớp đó. Các đối tượng của lớp sẽ chia sẻ cùng một bản sao của thành viên static, và nó có thể được truy cập mà không cần tạo đối tượng. Nó thường được sử dụng để lưu trữ dữ liệu chung của tất cả đối tượng.
 
-void listSelectedFeatures(uint8_t features) {
-    printf("Selected Features:\n");
+### Volatile
+Từ khóa volatile trong ngôn ngữ lập trình C được sử dụng để báo hiệu cho trình biên dịch rằng một biến có thể thay đổi ngẫu nhiên, ngoài sự kiểm soát của chương trình. Việc này ngăn chặn trình biên dịch tối ưu hóa hoặc xóa bỏ các thao tác trên biến đó, giữ cho các thao tác trên biến được thực hiện như đã được định nghĩa.
 
-    if (isFeatureEnabled(features, GENDER)) {
-        printf("- Gender\n");
-    }
-    if (isFeatureEnabled(features, TSHIRT)) {
-        printf("- T-Shirt\n");
-    }
-    if (isFeatureEnabled(features, HAT)) {
-        printf("- Hat\n");
-    }
-    if (isFeatureEnabled(features, SHOES)) {
-        printf("- Shoes\n");
-    }
-    printf("Feature Binary:\n");
-    for (int i = 7; i >= 0 ; i--)
-    {
-        printf("%d", (features >> i) & 1);
-    }
-}
+Nghĩa là trình biên dịch không có quyền xóa biến kiểu Volatile mặc dù biến này không thực thi bất kỳ công việc hoặc thay đổi nào.
+
+Ví dụ: Khi một biến chứa giá trị Sensor có điều kiện không thay đổi. Với một biến bình thường, trình biên dịch sẽ xem xét và tối ưu hóa biến này làm cho sensor không thể cập nhật giá trị. Nhưng với một biến Volatile sẽ không bị trình biên dịch xóa và luôn có thể active.
+
+### Register
+
+Đối với một cấu trúc xử lý bình thường sẽ có luồng dữ liệu như sau:
+![Luồng](https://i.imgur.com/soZieSR.png)
+- Khi khai báo một biến ```int i = 5```, trình biên dịch sẽ cấp phát một địa chỉ trong RAM để chưa i. 
+- Khi muốn xử lý giá trị i, ví dụ cộng lên một. RAM sẽ đẩy giá trị i đến một thanh ghi nào đó và gửi phép cộng một đến một thanh ghi khác.
+- Sau đó hai thanh ghi này sẽ được truyền vào khối ALU (Arithmetic Logic Unit - Khối xử lý những phép toán logic trong vi điều khiển) để xử lý phép cộng này. 
+- Sau đó kết quả sẽ được truyền lại thanh ghi và cuối cùng sẽ gán vào địa chỉ của biến i trong RAM 
+
+Việc này sẽ mất nhiều tài nguyên khi xử lý những biến thường xuyên thay đổi giá trị.
+
+**Hạn chế**
+- Với từ khóa Register, biến được khởi tạo sẽ không có địa chỉ, sẽ làm giảm tính linh hoạt của biến. Nên không thể khai báo ở biến toàn cục (có nhiều hàm sẽ truy cập)
+- Số thanh ghi trong vi điều khiển là giới hạn. Khi khai báo biến toàn cục thì sẽ luôn lưu biến tại vị trí thanh ghi đó, làm mất một ô thanh ghi. Làm giảm tính linh hoạt của thanh ghi.
+Trong ngôn ngữ lập trình C, từ khóa register được sử dụng để chỉ ra ý muốn của lập trình viên rằng một biến được sử dụng thường xuyên và có thể được lưu trữ trong một thanh ghi máy tính, chứ không phải trong bộ nhớ RAM. Việc này nhằm tăng tốc độ truy cập. 
+
+Tuy nhiên, lưu ý rằng việc sử dụng register chỉ là một đề xuất cho trình biên dịch và không đảm bảo rằng biến sẽ được lưu trữ trong thanh ghi. Trong thực tế, trình biên dịch có thể quyết định **không** tuân thủ lời đề xuất này.  
+**Ví dụ:**
+```cpp
+#include <stdio.h>
+#include <time.h>
 
 int main() {
-    uint8_t options = 0;
+    // Lưu thời điểm bắt đầu
+    clock_t start_time = clock();
+    int i;
 
-    // Thêm tính năng 
-    enableFeature(&options, GENDER | TSHIRT | HAT);
+    // Đoạn mã của chương trình
+    for (i = 0; i < 2000000; ++i) {
+        // Thực hiện một số công việc bất kỳ
+    }
 
-    disableFeature(&options, TSHIRT);
+    // Lưu thời điểm kết thúc
+    clock_t end_time = clock();
 
-    // Liệt kê các tính năng đã chọn
-    listSelectedFeatures(options);
-    
+    // Tính thời gian chạy bằng miligiây
+    double time_taken = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
+
+    printf("Thoi gian chay cua chuong trinh: %f giay\n", time_taken);
+
     return 0;
 }
 
 ```
-
+Chương trình trên với chức năng in ra màn hình thời gian thực thi hàm for đếm 2.000.0000 lần. Nó sẽ lấy thời gian trước khi thực thi và thời gian sau khi thực thi bằng hàm ```clock()``` cung cấp bởi thư viện ```time.h```. Và tính tổng số thời gian thực hiện của vòng lặp for.
+Với đoạn mã trên, ta khai báo biến i theo cách cơ bản thì sẽ thực thi với thời gian lâu hơn
 Kết quả:
 ```
-Selected Features:
-- Gender
-- Hat
-Feature Binary:
-00000101
+Thoi gian chay cua chuong trinh: 0.006000 giay
 ```
-Tại hàm main ta bật 3 bit ```GENDER | TSHIRT | HAT``` sau đó tắt một bit ```TSHIRT```, nên sẽ chỉ còn 2 bit được bật tại vị trí 0 và 2 như ta đã khai báo ở đầu.
 
+Và khi ta đổi biến i thành kiểu ```register int i;``` thì thời gian được rút ngắn đáng kể
+Kết quả:
+```
+Thoi gian chay cua chuong trinh: 0.001000 giay
+```
 
 </details>
     
@@ -910,182 +878,210 @@ Error: Divide by 0!
 ASSERT cũng có chức năng xử lý lỗi nhưng khi phát hiện lỗi thì ASSERT dừng chương trình và in ra lỗi trong khi đó thì TRY, CATCH vẫn tiếp tục thực thi chương trình.
 </details>
 
-## Bài 4: Extern - Static - Volatile - Register
+## Bài 6: BitMask  
 <details><summary>Xem</summary>
+ 
+- Bitmask là một kỹ thuật sử dụng các bit để lưu trữ và thao tác với các cờ (flags) hoặc trạng thái. Có thể sử dụng bitmask để đặt, xóa và kiểm tra trạng thái của các bit cụ thể trong một từ (word).
 
-### Extern
-- Extern được sử dụng để thông báo rằng một biến hoặc hàm đã được khai báo ở một nơi khác trong chương trình hoặc trong một file nguồn khác. Điều này giúp chương trình hiểu rằng biến hoặc hàm đã được định nghĩa và sẽ được sử dụng từ một vị trí khác, giúp quản lý sự liên kết giữa các phần khác nhau của chương trình hoặc giữa các file nguồn.
+- Bitmask thường được sử dụng để tối ưu hóa bộ nhớ, thực hiện các phép toán logic trên một cụm bit, và quản lý các trạng thái, quyền truy cập, hoặc các thuộc tính khác của một đối tượng.
 
-- Chỉ được khai báo chứ không được phép định nghĩa hay gán giá trị. Cú pháp: ```extern int A; ```
+### Bitwise Operatiors
+![Bitwise](https://i.imgur.com/HZs7vbg.png)
+#### NOT: 
+- 0 thành 1, 1 thành 0
+- Cú pháp: ```~b``` 
+#### AND:
+- Khi tất cả intput bằng 1 thì output bằng 1, ngược lại bằng 0
+- Cú pháp: ```a&b```
+#### OR:
+- Khi có ít nhất một input bằng 1 thì output bằng 1, ngược lại bằng 0
+- Cú pháp: ```a|b```
+### XOR:
+- Khi có một ngõ vào khác các ngõ vào còn lại thì bằng 1, ngược lại bằng 0.
+- Cú pháp: ```a^b```
+#### Shift Left, Shift Right
+- Dùng để di chuyển bit sang trái hoặc sang phải.
+    - Trong trường hợp <<, các bit ở bên phải sẽ được dịch sang trái, và các bit trái cùng sẽ được đặt giá trị 0.
+    - Trong trường hợp >>, các bit ở bên trái sẽ được dịch sang phải, và các bit phải cùng sẽ được đặt giá trị 0 hoặc 1 tùy thuộc vào giá trị của bit cao nhất (bit dấu).
 
-- Các hàm có thể không cần sử dụng Extern nhưng File khác vẫn có thể sử dụng được bình thường.
 
-- Các File phải liên kết với nhau theo lệnh:   
-```gcc main.c File1.c File2.c -o main```: Liên kết ba file .c và tạo ra file main.exe
-
-Ví dụ:  
-File1.h
+**Ví dụ**
 ```cpp
-#ifndef FILE1_H
-#define FILE1_H
-
+#include <stdint.h>
 #include <stdio.h>
-
-extern int externVariable;
-
-int add(int a, int b);
-
-#endif
-```
-File1.c
-```cpp
-#include "File1.h"
-
-int externVariable = 20;
-
-int add(int a, int b){
-    return a + b;
-}
-
-```
-main.c
-```cpp
-#include <stdio.h>
-#include "File1.h"
 
 int main(){
-    
-    printf("Extern Variable: %d\n",externVariable); 
 
-    int result = add(3,5);
-    print("Result: %d\n", result)
+    const uint8_t init  = 0b01001011; // 75
+    const uint8_t init1 = 0b01101001; // 105
     
+    uint8_t notInit = ~init; //0b10110100: 180
+    printf("NOT: %d\n", notInit);
+    
+    uint8_t AND = init&init1; //0b01001001: 73  
+    printf("AND: %d\n", AND);
+
+    uint8_t OR = init|init1; //0b01101011: 107
+    printf("OR: %d\n", OR); 
+
+    uint8_t XOR = init^init1; //0b00100010: 34
+    printf("XOR: %d\n", XOR);
+
+    uint8_t shiftLeft = init<<3; //0b01011000: 88
+    printf("ShiftLeft 3 bit Init: %d\n", shiftLeft);
+
+    uint8_t shiftRight = init>>4 ; //0b00000100: 4
+    printf("ShiftRight 4 bit Init: %d\n", shiftRight);
+
+
     return 0;
 }
 ```
 Kết quả:
 ```
-Extern Variable: 20
-Result: 8
+NOT: 180
+AND: 73
+OR: 107
+XOR: 34
+ShiftLeft 3 bit Init: 88
+ShiftRight 4 bit Init: 4
 ```
-
-### Static
-#### Static Global
-Khi static được sử dụng với global variables ( biến toàn cục - khai báo biến bên ngoài hàm), nó hạn chế phạm vi của biến đó **chỉ trong file nguồn hiện tại**. Ví dụ file File1.c sử dụng ```static int x = 2;``` thì file main.c không thể nào truy cập được. Tượng tự đối với các Static Function.  
-**Ứng dụng**: dùng để thiết kế các file thư viện, tránh việc sử dụng các hàm ở những File khác gây lỗi thư viện.
-
-#### Static Local
-Ví dụ:
+**Ví dụ sử dụng bitmask**
 ```cpp
-#include <stdio.h>
+#define GENDER        1 << 0  //0000 0001
+#define TSHIRT        1 << 1  //0000 0010
+#define HAT           1 << 2  //0000 0100
+#define SHOES         1 << 3  //0000 1000
 
-void count(void){
-    int x = 2;
-    printf("Tang x len 1: %d\n",x++);
-}
-
-int main(){
-    
-    count();
-    count();
-    count();
-    
-    return 0;
+#define FEATURE1      1 << 4  // Bit 4: Tính năng 1
+#define FEATURE2      1 << 5  // Bit 5: Tính năng 2
+#define FEATURE3      1 << 6  // Bit 6: Tính năng 3
+#define FEATURE4      1 << 7  // Bit 7: Tính năng 4
+```
+Thay vì khai báo mỗi đối tượng với kiểu uint8_t sẽ mất 4 bytes thì ta chỉ cần khai báo 8 đối tượng mà chỉ mất 1 byte.
+- Hàm bật một bit:
+```cpp
+void enableFeature(uint8_t *features, uint8_t change) {
+    *features |= change;
 }
 ```
-Tại hàm ```count()``` ta khai báo biến cục bộ ```int x = 2```, với mỗi lần gọi hàm, trình biên dịch sẽ khởi tạo cho biến x một địa chỉ trong bộ nhớ Stack và khi kêt thúc hàm sẽ thu hồi lại địa chỉ này. Sau đó lại cấp một địa chỉ mới có thể trùng địa chỉ cũ khi gọi lại hàm một lần nữa. Vì thế giá trị của x mỗi khi gọi hàm sẽ luôn bằng 2 và không tăng  
+- Giả sử ta có 
+```
+features:    10001000
+change  :    00000100
+______________________
+features:    10001100
+```
+- Như ví dụ trên, ta chỉ cần bật bit 2 và sử dụng phép OR để khi ```feature|change``` thì bit tại vị trí cần bật lên sẽ luôn bằng 1. Và những bit tại ví trị khác của ```features``` OR với bit 0 của ```change``` sẽ luôn là chính nó (Không làm thay đổi các bit khác).
+
+- Hàm tắt một bit:
+```cpp
+void disableFeature(uint8_t *features, uint8_t change) {
+    *features &= ~change;
+}
+```
+- Giả sử ta có  ```change: 00000010``` thì ```~change=11111101```
 Kết quả:
 ```
-Tang x len 1: 2
-Tang x len 1: 2
-Tang x len 1: 2
+features:    10001010
+change  :    11111101
+______________________
+features:    10001000
 ```
-Để khắc phục lỗi này ta sẽ sử dụng biến kiểu static local.
-Khi static được sử dụng với local variables (biến cục bộ - khai báo biến trong một hàm), nó giữ giá trị của biến qua các lần gọi hàm và giữ phạm vi của biến chỉ trong hàm đó.  
+Phép AND với 1 sẽ tắt bit của features tại vị trí bit 0 của change và các vị trí khác sẽ không đổi.
 
-Thay đổi hàm ```count();```
+- Hàm đọc giá trị một bit
 ```cpp
-void count(void){
-    static int x = 2;
-    printf("Tang x len 1: %d\n",x++);
+int isFeatureEnabled(uint8_t features, uint8_t change) {
+    return (features & change) != 0;
 }
 ```
-Ta sẽ khai báo biến x là biến static cục bộ. Khi lần đầu gọi hàm, trình biên dịch sẽ khởi tạo địa chỉ cho biến x này và sẽ luôn giữ giá trị xuyên suốt chương trình, khi kết thúc một lần gọi hàm hàm x sẽ được cộng lên 1. Với lần thứ 2 trở đi, khi gọi hàm trình biên dịch sẽ bỏ qua lệnh khai báo biến và trực tiếp thực thi lệnh ```printf``` và ```x++``` 
-Kết quả:
+Giả sử ta muốn kiểm tra bit 5
 ```
-Tang x len 1: 2
-Tang x len 1: 3
-Tang x len 1: 4
+features:    10001010
+change  :    00100000
+______________________
+features:    00000000
 ```
-#### Static trong Class
-Khi một thành viên của lớp được khai báo là static, nó thuộc về lớp chứ không thuộc về các đối tượng cụ thể của lớp đó. Các đối tượng của lớp sẽ chia sẻ cùng một bản sao của thành viên static, và nó có thể được truy cập mà không cần tạo đối tượng. Nó thường được sử dụng để lưu trữ dữ liệu chung của tất cả đối tượng.
+Ta sẽ AND biến cần kiểm tra với mặt nạ mạng có giá trị 0 ở tất cả các bit (Kết quả luôn bằng 0) ngoại trừ vị trí cần kiểm tra sẽ có bit 1, nếu bit tại đó bằng 1 thì kết quả bằng 1, ngược lại bằng 0.
+Cả hai hàm bật/tắt bit trên sẽ truyền vào con trỏ để xác định được vị trí đang lưu của đổi tượng cần thay đổi bit. Nhưng với hàm đọc chúng ta chỉ cần biết giá trị chứ không cần đổi nên sẽ truyền vào tham số là một biến bình thường. Lúc này, biến sẽ được khởi tạo ở một địa chỉ khác và không thay đổi giá trị của biến gốc.
 
-### Volatile
-Từ khóa volatile trong ngôn ngữ lập trình C được sử dụng để báo hiệu cho trình biên dịch rằng một biến có thể thay đổi ngẫu nhiên, ngoài sự kiểm soát của chương trình. Việc này ngăn chặn trình biên dịch tối ưu hóa hoặc xóa bỏ các thao tác trên biến đó, giữ cho các thao tác trên biến được thực hiện như đã được định nghĩa.
-
-Nghĩa là trình biên dịch không có quyền xóa biến kiểu Volatile mặc dù biến này không thực thi bất kỳ công việc hoặc thay đổi nào.
-
-Ví dụ: Khi một biến chứa giá trị Sensor có điều kiện không thay đổi. Với một biến bình thường, trình biên dịch sẽ xem xét và tối ưu hóa biến này làm cho sensor không thể cập nhật giá trị. Nhưng với một biến Volatile sẽ không bị trình biên dịch xóa và luôn có thể active.
-
-### Register
-
-Đối với một cấu trúc xử lý bình thường sẽ có luồng dữ liệu như sau:
-![Luồng](https://i.imgur.com/soZieSR.png)
-- Khi khai báo một biến ```int i = 5```, trình biên dịch sẽ cấp phát một địa chỉ trong RAM để chưa i. 
-- Khi muốn xử lý giá trị i, ví dụ cộng lên một. RAM sẽ đẩy giá trị i đến một thanh ghi nào đó và gửi phép cộng một đến một thanh ghi khác.
-- Sau đó hai thanh ghi này sẽ được truyền vào khối ALU (Arithmetic Logic Unit - Khối xử lý những phép toán logic trong vi điều khiển) để xử lý phép cộng này. 
-- Sau đó kết quả sẽ được truyền lại thanh ghi và cuối cùng sẽ gán vào địa chỉ của biến i trong RAM 
-
-Việc này sẽ mất nhiều tài nguyên khi xử lý những biến thường xuyên thay đổi giá trị.
-
-**Hạn chế**
-- Với từ khóa Register, biến được khởi tạo sẽ không có địa chỉ, sẽ làm giảm tính linh hoạt của biến. Nên không thể khai báo ở biến toàn cục (có nhiều hàm sẽ truy cập)
-- Số thanh ghi trong vi điều khiển là giới hạn. Khi khai báo biến toàn cục thì sẽ luôn lưu biến tại vị trí thanh ghi đó, làm mất một ô thanh ghi. Làm giảm tính linh hoạt của thanh ghi.
-Trong ngôn ngữ lập trình C, từ khóa register được sử dụng để chỉ ra ý muốn của lập trình viên rằng một biến được sử dụng thường xuyên và có thể được lưu trữ trong một thanh ghi máy tính, chứ không phải trong bộ nhớ RAM. Việc này nhằm tăng tốc độ truy cập. 
-
-Tuy nhiên, lưu ý rằng việc sử dụng register chỉ là một đề xuất cho trình biên dịch và không đảm bảo rằng biến sẽ được lưu trữ trong thanh ghi. Trong thực tế, trình biên dịch có thể quyết định **không** tuân thủ lời đề xuất này.  
-**Ví dụ:**
+Full Code:
 ```cpp
 #include <stdio.h>
-#include <time.h>
+#include <stdint.h>
+
+
+#define GENDER        1 << 0  // Bit 0: Giới tính (0 = Nữ, 1 = Nam)
+#define TSHIRT        1 << 1  // Bit 1: Áo thun (0 = Không, 1 = Có)
+#define HAT           1 << 2  // Bit 2: Nón (0 = Không, 1 = Có)
+#define SHOES         1 << 3  // Bit 3: Giày (0 = Không, 1 = Có)
+// Tự thêm tính năng khác
+#define FEATURE1      1 << 4  // Bit 4: Tính năng 1
+#define FEATURE2      1 << 5  // Bit 5: Tính năng 2
+#define FEATURE3      1 << 6  // Bit 6: Tính năng 3
+#define FEATURE4      1 << 7  // Bit 7: Tính năng 4
+
+void enableFeature(uint8_t *features, uint8_t feature) {
+    *features |= feature;
+}
+
+void disableFeature(uint8_t *features, uint8_t feature) {
+    *features &= ~feature;
+}
+
+
+int isFeatureEnabled(uint8_t features, uint8_t feature) {
+    return (features & feature) != 0;
+}
+
+void listSelectedFeatures(uint8_t features) {
+    printf("Selected Features:\n");
+
+    if (isFeatureEnabled(features, GENDER)) {
+        printf("- Gender\n");
+    }
+    if (isFeatureEnabled(features, TSHIRT)) {
+        printf("- T-Shirt\n");
+    }
+    if (isFeatureEnabled(features, HAT)) {
+        printf("- Hat\n");
+    }
+    if (isFeatureEnabled(features, SHOES)) {
+        printf("- Shoes\n");
+    }
+    printf("Feature Binary:\n");
+    for (int i = 7; i >= 0 ; i--)
+    {
+        printf("%d", (features >> i) & 1);
+    }
+}
 
 int main() {
-    // Lưu thời điểm bắt đầu
-    clock_t start_time = clock();
-    int i;
+    uint8_t options = 0;
 
-    // Đoạn mã của chương trình
-    for (i = 0; i < 2000000; ++i) {
-        // Thực hiện một số công việc bất kỳ
-    }
+    // Thêm tính năng 
+    enableFeature(&options, GENDER | TSHIRT | HAT);
 
-    // Lưu thời điểm kết thúc
-    clock_t end_time = clock();
+    disableFeature(&options, TSHIRT);
 
-    // Tính thời gian chạy bằng miligiây
-    double time_taken = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-
-    printf("Thoi gian chay cua chuong trinh: %f giay\n", time_taken);
-
+    // Liệt kê các tính năng đã chọn
+    listSelectedFeatures(options);
+    
     return 0;
 }
 
 ```
-Chương trình trên với chức năng in ra màn hình thời gian thực thi hàm for đếm 2.000.0000 lần. Nó sẽ lấy thời gian trước khi thực thi và thời gian sau khi thực thi bằng hàm ```clock()``` cung cấp bởi thư viện ```time.h```. Và tính tổng số thời gian thực hiện của vòng lặp for.
-Với đoạn mã trên, ta khai báo biến i theo cách cơ bản thì sẽ thực thi với thời gian lâu hơn
+
 Kết quả:
 ```
-Thoi gian chay cua chuong trinh: 0.006000 giay
+Selected Features:
+- Gender
+- Hat
+Feature Binary:
+00000101
 ```
-
-Và khi ta đổi biến i thành kiểu ```register int i;``` thì thời gian được rút ngắn đáng kể
-Kết quả:
-```
-Thoi gian chay cua chuong trinh: 0.001000 giay
-```
-
-
-
+Tại hàm main ta bật 3 bit ```GENDER | TSHIRT | HAT``` sau đó tắt một bit ```TSHIRT```, nên sẽ chỉ còn 2 bit được bật tại vị trí 0 và 2 như ta đã khai báo ở đầu.
 
 
 </details>
