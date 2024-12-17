@@ -910,7 +910,7 @@ Error: Divide by 0!
 ASSERT cũng có chức năng xử lý lỗi nhưng khi phát hiện lỗi thì ASSERT dừng chương trình và in ra lỗi trong khi đó thì TRY, CATCH vẫn tiếp tục thực thi chương trình.
 </details>
 
-## Bài 5: Extern - Static - Volatile - Register
+## Bài 4: Extern - Static - Volatile - Register
 <details><summary>Xem</summary>
 
 ### Extern
