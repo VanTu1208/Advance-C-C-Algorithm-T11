@@ -1083,6 +1083,215 @@ Feature Binary:
 ```
 Tại hàm main ta bật 3 bit ```GENDER | TSHIRT | HAT``` sau đó tắt một bit ```TSHIRT```, nên sẽ chỉ còn 2 bit được bật tại vị trí 0 và 2 như ta đã khai báo ở đầu.
 
+</details>
+
+
+
+## Bài 7: Struct - Union
+<details><summary>Xem</summary>
+
+### Struct
+- Trong ngôn ngữ lập trình C, struct là một cấu trúc dữ liệu cho phép lập trình viên tự định nghĩa một kiểu dữ liệu mới bằng cách nhóm các biến có các kiểu dữ liệu khác nhau lại với nhau. struct cho phép tạo ra một thực thể dữ liệu lớn hơn và có tổ chức hơn từ các thành viên (members) của nó.
+
+- Cú pháp
+```cpp
+struct TenStruct {
+    kieuDuLieu1 thanhVien1;
+    kieuDuLieu2 thanhVien2;
+    // ...
+};
+
+struct TenStruct Struct1, Struct2, Struct3[50];
+```
+Hoặc
+```cpp
+typedef struct TenStruct {
+    kieuDuLieu1 thanhVien1;
+    kieuDuLieu2 thanhVien2;
+    // ...
+} TenStruct;
+
+TenStruct Struct1, Struct2, *Struct4;
+```
+
+- **Địa chỉ của Struct** là địa chỉ của **member đầu tiên**.
+
+- Truy cập sử dụng thành phần của Struct
+```cpp
+Struct1.thanhvien1 = ...;
+Struct1.thanhvien2 = ...;
+```
+- Nếu biến Struct là một con trỏ. Ví dụ ```*Struct4``` thì muốn truy cập vào phần tử phải sử dụng cú pháp:
+```cpp
+Struct4->thanhvien1 = ...;
+Struct4->thanhvien2 = ...;
+```
+
+- **Data Alignment**: Quá trình sắp xếp các thành phần của struct, sao cho địa chỉ của những thành phần này phù hợp với yêu cầu căn chỉnh của CPU.
+Ví dụ: thành phần có kiểu dữ liệu Double thì nó phải bắt đầu ở những địa chỉ chia hết cho 8 như ```0xA0```, ```0xA8```
+- **Data Padding**: Những byte địa chỉ trống không chứa dữ liệu. Khi xắp xếp dữ liệu phù hợp, sẽ thừa ra nhưng byte trống ở giữa
+**Ví dụ:**
+```cpp
+#include <stdio.h>
+#include <stdint.h>
+
+typedef struct{
+    uint8_t  mem1;
+    uint16_t mem2;
+    uint32_t mem3;
+} Container;
+
+int main(int argc, char const *argv[])
+{
+    printf("Size of Container: %d\n",sizeof(Container));
+    return 0;
+}
+```
+- Ở vị dụ trên, ta sẽ có một Struct tên Container chưa ba phần tử, tổng kích thước của chúng là 7 bytes
+- Nhưng kết quả:
+```
+Size of Container: 8
+```
+Thay đổi so với lý thuyết do **Data Alignment**
+- Trình biên dịch sẽ dựa vào thành phần có kích thước lớn nhất để cấp phát địa chỉ. Ở đây là mem3 với 4 bytes. Vì thế mỗi lần cấp thêm địa chỉ phải cấp 4 bytes
+- Đầu tiên, cấp 4 bytes để lưu trữ mem1, ví dụ:```0xA0 0xA1 0xA2 0xA3``` mem1 chỉ có một bytes nên được lưu ở ```0xA0```.
+- Sau đó mem2 có 2 byte nên phải lưu ở ô nhớ chia hết cho 2 nên sẽ lưu ở địa chỉ ```0xA2 0xA3```
+- Vì không còn đủ ô nhớ nên sẽ cấp phát thêm 4 bytes để lưu mem3. Vì thế sẽ mất 8 bytes để lưu được Struct này.
+![Mem](https://i.imgur.com/FKj6wSu.png)
+
+- Nếu chúng ta thay đổi vị trí của thành phần
+```cpp
+typedef struct{
+    uint8_t  mem1;
+    uint32_t mem3;
+    uint16_t mem2;
+} Container;
+```
+Thì kết quả sẽ là
+```
+Size of Container: 12
+```
+Vì địa chỉ của các thành phần được xếp như sau
+![Mem1](https://i.imgur.com/JZKgJpJ.png)
+Với **padding** là những vị trí địa chỉ có giá trị rỗng. 
+
+**Ví dụ với các thành phần là mảng**
+```cpp
+typedef struct{
+    uint8_t arr1[5];
+    uint32_t arr2[4]; 
+    uint16_t arr3[1]; 
+
+} ContainerArr;
+```
+Vị trí ô nhớ được căn chỉnh như sau:
+![can chinh](https://i.imgur.com/Ov2E0Rg.png)
+
+- Mỗi lần cấp phát địa chỉ sẽ cấp 4 bytes theo ```arr2``` và được cấp phát 7 lần như hình.
+Kết quả:
+```
+Size of ContainerArr: 28
+```
+
+### Union
+- Trong ngôn ngữ lập trình C, union là một cấu trúc dữ liệu giúp lập trình viên kết hợp nhiều kiểu dữ liệu khác nhau vào cùng một vùng nhớ. Mục đích chính của union là tiết kiệm bộ nhớ bằng cách chia sẻ cùng một vùng nhớ cho các thành viên của nó. 
+- Điều này có nghĩa là, trong một thời điểm, chỉ một thành viên của union có thể được sử dụng. Điều này được ứng dụng nhằm tiết kiệm bộ nhớ.
+
+- Vì thế **Kích thước** của Union là kích thước của thành phần có kích thước lớn nhất.
+- Cú pháp:
+```cpp
+union TenUnion {
+    kieuDuLieu1 thanhVien1;
+    kieuDuLieu2 thanhVien2;
+    // ...
+};
+```
+Hoặc
+```cpp
+tyupedef union  {
+    kieuDuLieu1 thanhVien1;
+    kieuDuLieu2 thanhVien2;
+    // ...
+} TenUnion;
+```
+**Ví dụ**
+```cpp
+#include <stdio.h>
+#include <stdint.h>
+
+typedef union {
+    uint8_t  mem1;
+    uint32_t mem3;
+    uint16_t mem2;
+} Container;
+
+int main(int argc, char const *argv[])
+{
+    printf("Size of Container: %d\n",sizeof(Container));
+
+    return 0;
+}
+```
+Vì kích thước kiểu dữ liệu lớn nhất là 4 bytes nên vùng nhớ của Union sẽ là 4 bytes và sử dụng chung cho tất cả các thành phần. Kết quả:
+```
+Size of Container: 4
+```
+- Nếu union có phần từ là các mảng 
+```cpp
+typedef union {
+    uint8_t arr1[5];
+    uint32_t arr2[4]; 
+    uint16_t arr3[1]; 
+} Container;
+```
+Union cũng sẽ lấy kích thước của phần tử lớn nhất là arr2[4]: Tức sẽ là 4x4 = 16 bytes
+
+- Một trường hợp khác:
+```cpp
+typedef union {
+    uint8_t arr1[5];
+    uint32_t arr2[4]; 
+    uint16_t arr3[10]; 
+} Container;
+```
+Ta có mảng ```arr2``` có **kích thước kiểu dữ liệu lớn** nhất là 4 bytes nhưng tổng kích thước của mảng chỉ có 16 bytes trong khi arr3 có kiểu dữ liệu nhỏ hơn là 2 bytes nhưng **tổng kích thước mảng lớn nhất** lên đến 2x10 = 20 bytes nên Union sẽ lấy vùng địa chỉ với kích thước là 20 bytes
+
+**Ví dụ:**
+```cpp
+#include <stdio.h>
+#include <stdint.h>
+
+typedef union {
+    uint8_t  val1;
+    uint32_t val2; 
+    uint16_t val3; 
+} Container;
+
+int main()
+{
+    Container group1;
+    group1.val2 = 726832469;// 00101011 01010010 10010101 01010101;
+
+    printf("Dia chi bien 1: %p        Gia tri bien 1: %d\n",&group1.val1 ,group1.val1);
+    printf("Dia chi bien 2: %p        Gia tri bien 2: %d\n",&group1.val2 ,group1.val2);
+    printf("Dia chi bien 3: %p        Gia tri bien 3: %d\n",&group1.val3 ,group1.val3);
+    return 0;
+}
+```
+Ta có ```726832469 = 00101011 01010010 10010101 01010101```
+Giả sử Union lưu giá trị tại địa chỉ 0xA0. Nó sẽ lưu byte có trọng số thấp trước. Như hình bên
+![memm](https://i.imgur.com/n6icjSD.png)
+
+Vì Union sử dụng chung vùng nhớ nên khi gán biến 2 vào Union thì sẽ gán cả 4 byte vào cùng nhớ đó và các thành phần khác lưu giá trị trong vùng nhớ đó tại ô nhớ đầu tiên.
+- Với ```val1``` có 1 byte dữ liệu nên sẽ đọc 1 byte từ địa chỉ đầu nên sẽ có giá trị 85
+- Với ```val2``` có 4 bytes nên sẽ đọc tất cả, nên kết quả là 726832469
+- ```val3``` có 2 bytes nên sẽ là 38229
+Kết quả:
+```
+Dia chi bien 1: 0000006B557FF74C        Gia tri bien 1: 85
+Dia chi bien 2: 0000006B557FF74C        Gia tri bien 2: 726832469
+Dia chi bien 3: 0000006B557FF74C        Gia tri bien 3: 38229   
+```
 
 </details>
 
