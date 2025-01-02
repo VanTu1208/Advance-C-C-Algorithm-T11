@@ -1296,6 +1296,257 @@ Dia chi bien 3: 0000006B557FF74C        Gia tri bien 3: 38229
 </details>
 
 
+## Bài 8: Memory Layout
+<details><summary>Xem</summary>
+Chương trình main.exe (trên window) được lưu ở bộ nhớ **SSD**, main.hex (nạp vào vi điều khiển) được lưu ở **FLASH**. Khi nhấn run chương trình trên window (cấp nguồn cho vi điều khiển) thì những chương trình này sẽ được copy vào bộ nhớ **RAM** để thực thi.
+
+### Phân vùng bộ nhớ (5 vùng)
+![5 vùng](https://i.imgur.com/vHDjQuS.png)
+
+#### Text segment (Code Segment)
+- Phân vùng có địa chỉ thấp nhất.
+- Chứa mã máy: tập hợp các lệnh thực thi
+- Quyền truy cập: Text Segment thường có quyền đọc và thực thi, nhưng không có quyền ghi **(Read Only)**.
+- Tất cả các biến lưu ở phần vùng Text đều không thể thay đổi giá trị mà chỉ được đọc.
+
+#### Data Segment (Initialized Data Segment - Dữ liệu đã được khởi tạo)
+- Chứa các biến toàn cục được khởi tạo với giá trị khác 0.
+- Chứa các biến static được khởi tạo với giá trị khác 0.
+- Quyền truy cập là **đọc và ghi**, tức là có thể đọc và thay đổi giá trị của biến.
+- Tất cả các biến sẽ được thu hồi sau khi chương trình kết thúc.
+
+#### BSS Segment (Uninitialized Data Segment - Dữ liệu chưa được khởi tạo)
+- Chứa các biến toàn cục khởi tạo với giá trị bằng 0 hoặc không gán giá trị.
+- Chứa các biến static với giá trị khởi tạo bằng 0 hoặc không gán giá trị.
+- Quyền truy cập là **đọc và ghi**, tức là có thể đọc và thay đổi giá trị của biến.
+- Tất cả các biến sẽ được thu hồi sau khi chương trình kết thúc.
+
+**Lưu ý:** Các hằng số và con trỏ kiểu char tùy thuộc vào trình biên dịch sẽ được lưu vào những phân vùng bộ nhớ khác nhau. Ví dụ:
+- MinGW (gcc/g++): lưu vào data segment (kiểu **Read Only**)
+- Clan: lưu vào phân vùng text
+Khi khao báo
+```cpp
+char *str = "text"
+```
+Thì con trỏ str sẽ lưu vào vùng nhớ data/text và chỉ được phép đọc, không thể thay đổi giá trị. Vì thế, muốn thay đổi giá trị chuỗi, khởi tạo bằng mảng ký tự.
+
+**Ví dụ**
+```cpp
+#include <stdio.h>
+
+const int a = 10;
+char arr[] = "Hello";
+char *arr1 = "Hello";
+
+int main() {
+   
+    printf("a: %d\n", a);
+
+    arr[3] = 'W';
+    printf("arr: %s", arr);
+    
+    arr1[3] = 'E';
+    printf("arr1: %s", arr1);
+
+    
+    return 0;
+}
+```
+Với ví dụ trên, ta khởi tạo hằng số nguyên a được lưu tại data với kiểu Read Only và không thể thay đổi giá trị, tương tự với con trỏ kiểu char *arr1. Nhưng mảng ký từ arr được lưu tại data (vì được khởi tạo giá trị "Hello") và có khả năng đọc ghi.
+Kết quả:
+```
+a: 10
+arr: HelWo
+```
+In ra được a và arr đã được thay đổi ký tự ở vị trí 3 nhưng khi thay đổi arr1 bị lỗi và kết thúc chương trình nên không in được arr1 ra màn hình.
+
+#### Stack 
+- Chứa các **biến cục bộ, tham số truyền vào** (ngoại trừ các biến Static cục bộ).
+- Quyền truy cập: đọc và ghi, nghĩa là có thể đọc và thay đổi giá trị của biến trong suốt thời gian chương trình chạy.
+- Sau khi **ra khỏi hàm**, sẽ thu hồi vùng nhớ.
+- LIFO (Last In - First Out)
+
+**So sánh hằng toàn cục và hằng cục bộ**: 
+- Hằng toàn cục được lưu tại text hoặc rdata (chỉ đọc) nên không thể thay đổi dữ liệu
+- Hằng cục bộ được lưu vào stack (đọc và ghi) nên có thể thay đổi dữ liệu nhưng không thể trực tiếp mà phải thông qua con trỏ.
+
+Ví dụ:
+```cpp
+#include <stdio.h>
+
+const int a = 10;
+int *ptr;
+void changeConst(){
+    const int b = 20;
+    ptr = &b;
+    *ptr = 100;
+    printf("b = %d", b);
+}
+
+int main() {
+    
+    printf("a: %d\n", a);
+    changeConst();
+    
+    return 0;
+}
+```
+Kết quả: 
+```
+main.c: In function 'changeConst':
+main.c:7:9: warning: assignment discards 'const' qualifier from pointer target type [-Wdiscarded-qualifiers]
+    7 |     ptr = &b;
+      |         ^
+a: 10
+b = 100
+```
+Vì thay đổi b (một hằng số) nên sẽ phát sinh warning nhưng chương trình vẫn hoạt động bình thường.
+
+**Lưu ý** Trong quá trình hoạt động. Nếu một mảng được khai báo nhiều phần tử gây tràn bộ nhớ hoặc không sử dụng hết số phần tử được khai báo thì sẽ gây lãng phí, thiếu linh hoạt. Vì thế, sử dụng các hàm khai báo bộ nhớ động như **malloc, calloc, realloc** trong thư viện ``` <stdlib.h>```. Ví dụ: ```malloc(10*sizeof(int))```: cấp 10 ô nhớ, mỗi ô 4 byte 
+- malloc, calloc: cấp phát bộ nhớ động (lưu trong heap)
+- realloc: thay đổi kích thước vùng nhớ động cho mảng được cấp phát bởi calloc hoặc malloc, giữ nguyên giá trị và vị trí ô nhớ đã được khởi tạo.
+
+#### Heap (Cấp phát động)
+- Heap được sử dụng để cấp phát bộ nhớ động trong quá trình thực thi của chương trình.
+- Điều này cho phép chương trình tạo ra và giải phóng bộ nhớ theo nhu cầu, thích ứng với sự biến đổi của dữ liệu trong quá trình chạy.
+- Các hàm như malloc(), calloc(), realloc(), và free() được sử dụng để cấp phát và giải phóng bộ nhớ trên heap.
+- Quyền truy cập: có quyền đọc và ghi, nghĩa là có thể đọc và thay đổi giá trị của biến trong suốt thời gian chương trình chạy.
+**So sánh STACK và HEAP**
+- Lưu trữ:    
+    - Bộ nhớ Stack được dùng để lưu trữ các biến cục bộ trong hàm, tham số truyền vào... Truy cập vào bộ nhớ này rất nhanh và được thực thi khi chương trình được biên dịch.
+    - Bộ nhớ Heap được dùng để lưu trữ vùng nhớ cho những biến được cấp phát động bởi các hàm malloc - calloc - realloc (trong C).
+- Quản lý:
+    - Vùng nhớ Stack được quản lý bởi hệ điều hành, dữ liệu được lưu trong Stack sẽ tự động giải phóng khi hàm thực hiện xong công việc của mình.
+    - Vùng nhớ Heap được quản lý bởi lập trình viên (trong C hoặc C++), dữ liệu trong Heap sẽ không bị hủy khi hàm thực hiện xong, điều đó có nghĩa bạn phải tự tay giải phóng vùng nhớ bằng câu lệnh free (trong C), và delete hoặc delete [] (trong C++), nếu không sẽ xảy ra hiện tượng rò rỉ bộ nhớ.
+- Tràn
+    - Bộ nhớ Stack cố định nên nếu chương trình bạn sử dụng quá nhiều bộ nhớ vượt quá khả năng lưu trữ của Stack chắc chắn sẽ xảy ra tình trạng tràn bộ nhớ Stack (Stack overflow), các trường hợp xảy ra như bạn khởi tạo quá nhiều biến cục bộ, hàm đệ quy vô hạn,...
+    - Nếu bạn liên tục cấp phát vùng nhớ mà không giải phóng thì sẽ bị lỗi tràn vùng nhớ Heap (Heap overflow). Nếu bạn khởi tạo một vùng nhớ quá lớn mà vùng nhớ Heap không thể lưu trữ một lần được sẽ bị lỗi khởi tạo vùng nhớ Heap thất bại.
+
+**Ví dụ: Sử dụng MALLOC**
+```cpp
+#include <stdio.h>
+#include <stdlib.h>
+
+int *arr = NULL;
+
+int main(int argc, char const *argv[])
+{
+    int size = 10;
+
+    arr = (int*)malloc(size*sizeof(int));
+
+    for(int i = 0; i < size-3; i++){
+        *(arr+i) = i + i*4;
+    }
+    for(int i = 0; i < size; i++){
+        printf("Gia tri %d = %d\n",i , *(arr+i));
+    }
+
+    printf("\n\n\n");
+
+    size = 15;
+    arr = realloc(arr, size*sizeof(int));
+    
+    for(int i = 0; i < size; i++){
+        printf("Gia tri %d = %d\n",i , *(arr+i));
+    }
+
+    free(arr);
+    return 0;
+}
+```
+Câu lệnh ```arr = (int*)malloc(size*sizeof(int));``` cấp phát mảng arr với số lượng phần tử size = 10, mỗi phần tử 4 byte int
+Sau đó gán giá trị vào mảng và in ra 10 phần tử.
+
+Để thay đổi kích thước mảng, sử dụng hàm ```realloc```
+```
+size = 15;
+arr = realloc(arr, size*sizeof(int));
+```
+Thay đổi kích thước mảng arr thành 15 phần tử và in ra màn hình
+Kết quả: 
+```
+Gia tri 0 = 0
+Gia tri 1 = 5 
+Gia tri 2 = 10
+Gia tri 3 = 15
+Gia tri 4 = 20
+Gia tri 5 = 25
+Gia tri 6 = 30
+Gia tri 7 = 7798895
+Gia tri 8 = 7471205
+Gia tri 9 = 6815827
+
+
+
+Gia tri 0 = 0
+Gia tri 1 = 5
+Gia tri 2 = 10
+Gia tri 3 = 15
+Gia tri 4 = 20
+Gia tri 5 = 25
+Gia tri 6 = 30
+Gia tri 7 = 7798895
+Gia tri 8 = 7471205
+Gia tri 9 = 6815827
+Gia tri 10 = 0
+Gia tri 11 = 0
+Gia tri 12 = 0
+Gia tri 13 = 0
+Gia tri 14 = 0
+```
+Cấp phát bộ nhớ động và khởi tạo giá trị cho 7 phần từ đầu, nên ba phần tử cuối sẽ có giá trị rác.Sau đó thay đổi số lượng phần tử và những phần tử chưa được gán giá trị từ trước (5 phần từ được khởi tạo sau) sẽ không có giá trị là 0 (khác với malloc là giá trị rác)
+
+**Ví dụ: Sử dụng CALLOC**
+```cpp
+#include <stdio.h>
+#include <stdlib.h>
+
+int *arr = NULL;
+
+int main(int argc, char const *argv[])
+{
+    int size = 10;
+
+    arr = (int*)calloc(size,sizeof(int));
+
+    for(int i = 0; i < size-3; i++){
+        *(arr+i) = i + i*4;
+    }
+    for(int i = 0; i < size; i++){
+        printf("Gia tri %d = %d\n",i , *(arr+i));
+    }
+
+    free(arr);
+    return 0;
+}
+```
+Kết quả:
+```
+Gia tri 0 = 0
+Gia tri 1 = 5
+Gia tri 2 = 10
+Gia tri 3 = 15
+Gia tri 4 = 20
+Gia tri 5 = 25
+Gia tri 6 = 30
+Gia tri 7 = 0
+Gia tri 8 = 0
+Gia tri 9 = 0
+```
+Khác với Malloc, những giá trị không được khởi tạo là giá trị rác nhưng Calloc phải khởi tạo các giá trị bằng 0
+
+**So sánh MALLOC và CALLOC**
+- Tham số  truyền vào hàm Malloc là kích thước bộ nhớ cần cấp phát, Còn Malloc là số lượng phần tử và kích thước của mỗi phần tử
+- Malloc không khởi tạo giá trị, Calloc và Realloc khởi tạo giá trị 0
+
+
+</details>
+
+
+
+
+
 
 
 
