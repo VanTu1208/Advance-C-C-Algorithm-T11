@@ -1549,7 +1549,7 @@ Khác với Malloc, những giá trị không được khởi tạo là g
 <details><summary>Xem</summary>  
 
 ### Stack
-Stack (ngăn xếp) là một cấu trúc dữ liệu tuân theo nguyên tắc "Last In, First Out" (LIFO), nghĩa là phần tử cuối cùng được thêm vào stack sẽ là phần tử đầu tiên được lấy ra.
+Stack (ngăn xếp) là một cấu trúc dữ liệu tuân theo nguyên tắc **Last In, First Out** (LIFO), nghĩa là phần tử cuối cùng được thêm vào stack sẽ là phần tử đầu tiên được lấy ra.
 
 ![sach](https://i.imgur.com/5qgqdOd.png)
 
