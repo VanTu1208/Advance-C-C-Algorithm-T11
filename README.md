@@ -1543,6 +1543,611 @@ Khác với Malloc, những giá trị không được khởi tạo là g
 
 </details>
 
+## Bài 9: Stack - Queue
+
+<details><summary>Xem</summary>  
+
+### Stack
+Stack (ngăn xếp) là một cấu trúc dữ liệu tuân theo nguyên tắc "Last In, First Out" (LIFO), nghĩa là phần tử cuối cùng được thêm vào stack sẽ là phần tử đầu tiên được lấy ra.
+
+![sach](https://i.imgur.com/5qgqdOd.png)
+
+Giống như khi xếp các cuốn sách vào trong thùng, quyển sách số 5 được để vào cuối cùng sẽ được lấy ra đầu tiên, còn quyển sách số 1 sẽ được lấy ra sau cùng
+
+Các thao tác cơ bản trên stack bao gồm:
+
+- **push** để thêm một phần tử vào đỉnh của stack
+- **pop** để xóa một phần tử ở đỉnh stack.
+- **top** để lấy giá trị của phần tử ở đỉnh stack.
+
+Stack có **chỉ số bắt đầu bằng 0** tức phần tử đầu tiên được đưa vào có chỉ số 0, phần tử đưa vào cuối cùng có chỉ số **size - 1**(top). Vì thế:
+- Stack đầy khi **top(max) = size - 1**
+- Stack rỗng khi **top = -1**
+
+**Ví dụ mô phỏng hoạt động của Stack**
+```cpp
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+typedef struct {
+    int* items;
+    int size; 
+    int top; 
+} Stack;
+
+void initialize( Stack *stack, int size) { 
+    stack->items = (int*) calloc(size,sizeof(int));
+    stack->size = size;
+    stack->top = -1; 
+}
+
+bool is_empty( Stack stack) { // Kiểm tra Stack rỗng?
+    return stack.top == -1;
+}
+
+bool is_full( Stack stack) { // Kiểm tra Stack đầy?
+    return stack.top == stack.size - 1;
+}
+
+void push( Stack *stack, int value) { //Thêm phần tử vào Stack
+    if (!is_full(*stack)) {
+        stack->items[++stack->top] = value;
+        printf("Push stack value: %d\n", value);
+    } else {
+        printf("Stack overflow\n");
+    }
+}
+
+int pop( Stack *stack) { // Xóa 1 phần tử khỏi stack
+    if (!is_empty(*stack)) {
+        return stack->items[stack->top--];
+    } else {
+        printf("Stack underflow\n");
+        return -1;
+    }
+}
+
+int top( Stack stack) { // Đọc phần tử top, chỉ đọc nên không truyền vào con trỏ
+    if (!is_empty(stack)) {
+        return stack.items[stack.top];
+    } else {
+        printf("Stack is empty\n");
+        return -1;
+    }
+}
+
+int main() {
+    Stack stack1; // Tao Stack
+    initialize(&stack1, 3); //Truyen vao dia chi de cau hinh truc tiep Stack
+
+
+    push(&stack1, 10);
+    push(&stack1, 20);
+    push(&stack1, 30);
+    push(&stack1, 40);
+
+    printf("Top element: %d\n", top(stack1));
+
+    printf("Pop element: %d\n", pop(&stack1));
+    printf("Pop element: %d\n", pop(&stack1));
+
+    printf("Top element: %d\n", top(stack1));
+    printf("Pop element: %d\n", pop(&stack1));
+    printf("Pop element: %d\n", pop(&stack1));
+    
+
+    return 0;
+}
+```
+Giải thích:
+```cpp
+typedef struct {
+    int* items; //mảng lưu giá trị các phần tử
+    int size; // số lượng phần tử tối đa của stack
+    int top; // chỉ số phần tử ở đỉnh Stack
+} Stack;
+```
+Khởi tạo Stack gồm có 3 thuộc tính: ```items``` lưu giá trị, ```size``` lưu số lượng phần tử tối đa của Stack, ```top lưu chỉ số đỉnh của Stack
+
+```cpp
+void initialize( Stack *stack, int size) { 
+    stack->items = (int*) calloc(size,sizeof(int)); 
+    stack->size = size;
+    stack->top = -1; 
+}
+```
+Hàm khởi tạo một Stack, đưa vào tham số con trỏ để cấu hình trực tiếp tại địa chỉ lưu Stack, cấp bộ nhớ động bằng hàm calloc để khởi tạo các phần tử của mảng là 0 và đặt giá trị top = -1 (rỗng)
+```cpp
+bool is_empty( Stack stack) { // Kiểm tra Stack rỗng?
+    return stack.top == -1;
+}
+
+bool is_full( Stack stack) { // Kiểm tra Stack đầy?
+    return stack.top == stack.size - 1;
+}
+```
+Hai hàm kiểm tra Stack có đầy hay rỗng hay không. Nếu đầy thì ```top == size - 1```, nếu rỗng thì ```top == -1```
+
+```cpp
+void push( Stack *stack, int value) { //Thêm phần tử vào Stack
+    if (!is_full(*stack)) {
+        stack->items[++stack->top] = value;
+        printf("Push stack value: %d\n", value);
+    } else {
+        printf("Stack overflow\n");
+    }
+}
+```
+Hàm thêm phần từ vào Stack **push** sẽ kiểm tra nếu Stack chưa đầy thì cộng chỉ số top lên 1 và gán giá trị vào mảng tại vị trí top, nếu Stack đầy thì báo lỗi.
+
+```cpp
+int pop( Stack *stack) { // Xóa 1 phần tử khỏi stack
+    if (!is_empty(*stack)) {
+        return stack->items[stack->top--];
+    } else {
+        printf("Stack underflow\n");
+        return -1;
+    }
+}
+```
+Hàm đọc và xóa phần từ **pop** kiểm tra nếu Stack không rỗng thì đọc giá trị và giảm chỉ số của top xuống 1, nếu stack rỗng thì báo lỗi và trả về -1.
+
+
+```cpp
+int top( Stack stack) { // Đọc phần tử top, chỉ đọc nên không truyền vào con trỏ
+    if (!is_empty(stack)) {
+        return stack.items[stack.top];
+    } else {
+        printf("Stack is empty\n");
+        return -1;
+    }
+}
+```
+Hàm đọc giá trị top (không xóa) **top** tương tự với hàm **push** nhưng không giảm chỉ số của top.
+
+```cpp
+int main() {
+    Stack stack1; // Tao Stack
+    initialize(&stack1, 3); //Truyen vao dia chi de cau hinh truc tiep Stack
+
+
+    push(&stack1, 10);
+    push(&stack1, 20);
+    push(&stack1, 30);
+    push(&stack1, 40);
+
+    printf("Top element: %d\n", top(stack1));  // [1[]
+
+    printf("Pop element: %d\n", pop(&stack1)); // [2]
+    printf("Pop element: %d\n", pop(&stack1)); // [3]
+
+    printf("Top element: %d\n", top(stack1));  // [4]
+    printf("Pop element: %d\n", pop(&stack1)); // [5]
+    printf("Pop element: %d\n", pop(&stack1)); // [6]
+    
+
+    return 0;
+}
+```
+Với hàm main() sẽ kiểm tra tính đúng đắn trong cách hoạt động của Stack.
+- Khởi tạo ```stack1``` có 3 phần tử. 
+- Sau đó thêm vào 4 phần tử ở top, tức sẽ có 1 phần tử bị lỗi là giá trị 40. Nên Stack chỉ chứa 30 20 và 10
+- Sau đó đọc nhưng không xóa top, được giá trị 30 **[1]**
+- Đọc và xóa liên tiếp 2 lần: 30 và 20 (Stack còn lại 10) **[2]** **[3]**
+- Đọc nhưng không xóa giá trị 10 **[4]**
+- Đọc và xóa giá trị 10 (stack1 rỗng) **[5]**
+- Đọc và xóa -> Lỗi stack1 rỗng (trả về -1) **[6]**
+
+Kết quả đúng với lý thuyết:
+```
+Push stack value: 10
+Push stack value: 20
+Push stack value: 30
+Stack overflow
+Top element: 30
+Pop element: 30
+Pop element: 20
+Top element: 10
+Pop element: 10
+Stack underflow
+Pop element: -1
+```
+
+**Ứng dụng Stack vào đệ quy**
+```cpp
+#include <stdio.h>
+
+// Hàm đệ quy tính giai thừa n! = n * (n-1) * (n-2) * ... * 1
+int giaiThua(int n) { // 0xa2: 4
+    if (n == 0 || n == 1) 
+        return 1;
+    else
+        return n * giaiThua(n - 1); // Đệ quy: n! = n * (n-1)!
+}
+
+int main() {
+    int n; // 0x01: 53
+    printf("Input n: ");
+    scanf("%d", &n);
+
+    if (n < 0) {
+        printf("Error.\n");
+    } else {
+        printf("%d! = %d\n",n, giaiThua(n));
+    }
+
+    return 0;
+}
+
+```
+Kết quả
+```
+Input n: 5
+5! = 120
+```
+Với hàm ```giaiThua(int n)``` sẽ tính giai thừa của n ví dụ 5! = 120. Hàm này khi hoạt động sẽ gọi lại chính nó (gọi là đệ quy). 
+
+Các bước khi tính n!:
+- Lưu địa chỉ của n vào Stack trước khi tính giaiThua(n - 1)
+- Sau đó khi thực thi giaiThua(n - 1) sẽ tiếp tục lưu giaiThua(n - 1) vào Stack bây giờ trong hàm được xem là n.
+- Lặp lại đến khi ```(n == 0 || n == 1)``` và trả về 1.
+- Sau đó sẽ gọi tất cả các giá trị trong Stack ra để nhân và tính giai thừa (1x1x2x3x4x5 = 120)
+
+
+### Queue
+
+Queue là một cấu trúc dữ liệu tuân theo nguyên tắc "First In, First Out" (FIFO), nghĩa là phần tử đầu tiên được thêm vào hàng đợi sẽ là phần tử đầu tiên được lấy ra.   
+Các thao tác cơ bản trên hàng đợi bao gồm:
+- **enqueue** thêm phần tử vào cuối hàng đợi.
+- **dequeue** lấy phần tử từ đầu hàng đợi.  
+- **front** để lấy giá trị của phần tử đứng đầu hàng đợi.
+- **rear** để lấy giá trị của phần tử đứng cuối hàng đợi.
+- **isFull** và **isEmpty** kiểm tra hàng đợi đầy hoặc rỗng.
+
+Các loại hàng đợi: Linear Queue (hàng đợi tuyến tính), Circle Queue (Hàng đợi tròn), Priority Queue,...
+
+#### Linear Queue (Hàng đợi tuyến tính)
+Tính chất:
+- Khi khởi tạo: cả front và rear đều bằng -1 (rỗng)
+- Enqueue -> rear++
+- Dequeue -> front++
+- rear == -1 || front == -1 thì Queue rỗng
+- rear == size - 1 thì Queue đầy
+**Nhược điểm**: Nếu rear == size - 1 thì queue sẽ được coi là đầy dù cho phía trước vẫn còn khoảng trống vì các phần tử bị Dequeue, không thể thêm phần tử mới.
+Chỉ có thể thêm phần tử mới khi đã Dequeue toàn bộ phần tử hiện có, tức là hàng đợi rỗng hoàn toàn và front được reset về vị trí ban đầu front = -1
+
+Ví dụ:
+```cpp
+typedef struct Queue {
+    int* items;
+    int size;
+    int front;
+    int rear;
+} Queue;
+```
+Tạo hàng đợi với 4 thuộc tính được giải thích ở truyền
+```cpp
+void initialize(Queue *queue, int size) 
+{
+    queue->items = (int*) calloc(size,sizeof(int));
+    queue->front = -1;
+    queue->rear = -1;
+    queue->size = size;
+}
+```
+Khởi tạo hàng đợi với front = rear = -1 và cấp bộ nhớ động cho mảng chứa giá trị của hàng đợi và khởi tạo về 0.
+```cpp
+int is_empty(Queue queue) {
+    return (queue.front == -1 || queue.rear == -1);
+}
+
+int is_full(Queue queue) {
+    return queue.rear == queue.size - 1;
+}
+```
+Hai hàm để kiểm tra hàng đợi rỗng khi  ```(queue.front == -1 || queue.rear == -1)``` và hàng đợi đầy khi ```queue.rear == queue.size - 1``` không quan tâm đến front.
+
+```cpp
+void enqueue(Queue *queue, int value) {
+    if (!is_full(*queue)) {
+        if (is_empty(*queue)) {
+            queue->front = queue->rear = 0;
+        } else {
+            queue->rear++   ;
+        }
+        queue->items[queue->rear] = value;
+        printf("Enqueue element %d\n",value);
+    } else {
+        printf("Can't Enqueue. Queue overflow\n");
+    }
+}
+```
+Hàm thêm phần tử vào cuối hàng đợi. Nếu hàng đợi không đầy thì kiểm tra hàng đợi có rỗng hay không để đặt ```queue->front = queue->rear = 0```, nếu không rỗng thì tăng rear lên 1 và gán giá trị vào vị trí rear
+```cpp
+int dequeue(Queue *queue) {
+    if (!is_empty(*queue)) {
+        int dequeued_value = queue->items[queue->front];
+        if (queue->front == queue->rear) {
+            queue->front = queue->rear = -1;
+        } else {
+            queue->front++;
+        }
+        return dequeued_value;
+    } else {
+        printf("Can't Dequeue. Queue underflow\n");
+        return -1;
+    }
+}
+```
+Hàm xóa phần từ đầu hàng đợi, kiểm tra hàng đợi có rỗng hãy không sau đó kiểm tra ```queue->front == queue->rear``` để xem hàng đợi có phải còn 1 phần tử hay không để sau khi xóa thì hàng đợi rỗng, nếu hàng đợi còn lớn hơn 1 phần tử thì tăng front.
+
+```cpp
+int front(Queue queue) {
+    if (!is_empty(queue)) {
+        return queue.items[queue.front];
+    } else {
+        printf("Queue is empty\n");
+        return -1;
+    }
+}
+
+
+int rear(Queue queue) {
+    if (!is_empty(queue)) {
+        return queue.items[queue.rear];
+    } else {
+        printf("Queue is empty\n");
+        return -1;
+    }
+}
+
+``` 
+Hai hàm đọc giá trị tại front và rear
+
+```cpp
+void displayQueue(Queue queue){
+    if(is_empty(queue)){
+        printf("Queue is empty\n");
+    } else {
+        printf("------Queue: ");
+        for(int i = queue.front; i <= queue.rear; i++){
+            printf(" %d", queue.items[i]);
+        }
+        printf("\n");
+    }
+}
+```
+Hàm in ra toàn bộ giá trị của hàng đợi, ta luôn có **front <= real** 
+
+Hàm main() để kiểm tra cách thức hoạt động
+```cpp
+int main() {
+    Queue queue;
+    initialize(&queue, 3);
+
+    enqueue(&queue, 10); displayQueue(queue);
+    enqueue(&queue, 20); displayQueue(queue);
+    enqueue(&queue, 30); displayQueue(queue);
+    enqueue(&queue, 40); displayQueue(queue);
+
+    printf("Front element: %d\n", front(queue));
+
+    printf("Dequeue element: %d\n", dequeue(&queue)); displayQueue(queue);
+    printf("Rear element: %d\n", rear(queue));
+    printf("Dequeue element: %d\n", dequeue(&queue)); displayQueue(queue);
+
+    printf("Front element: %d\n", front(queue));
+
+    enqueue(&queue, 40); displayQueue(queue);
+    
+    printf("Dequeue element: %d\n", dequeue(&queue)); displayQueue(queue);
+    enqueue(&queue, 40); displayQueue(queue);
+
+    return 0;
+}
+```
+Kết quả:
+```
+Enqueue element 10
+------Queue:  10
+Enqueue element 20
+------Queue:  10 20
+Enqueue element 30
+------Queue:  10 20 30
+Can't Enqueue. Queue overflow
+------Queue:  10 20 30
+Front element: 10
+Dequeue element: 10
+------Queue:  20 30
+Rear element: 30
+Dequeue element: 20
+------Queue:  30
+Front element: 30
+Can't Enqueue. Queue overflow
+------Queue:  30
+Dequeue element: 30
+Queue is empty
+Enqueue element 40
+------Queue:  40
+```
+Sau khi thêm ba phần tử 10 20 30 thì hàng đợi đầy, không thể thêm được phần tử mới 
+```
+Enqueue element 10
+------Queue:  10
+Enqueue element 20
+------Queue:  10 20
+Enqueue element 30
+------Queue:  10 20 30
+Can't Enqueue. Queue overflow
+```
+Khi hàng đợi còn phần tử chưa được xóa thì không thể Enqueue 
+```
+------Queue:  30
+Front element: 30
+Can't Enqueue. Queue overflow
+```
+Phải xóa toàn bộ hàng đợi thì mới thêm được phần tử mới 
+```
+Dequeue element: 30
+Queue is empty
+Enqueue element 40
+------Queue:  40
+```
+
+
+#### Circle Queue (Hàng đợi tròn)
+Với Circle Queue, sẽ khác phục được nhược điểm của Linear Queue khi hàng đợi trống nhưng không thể thêm phần tử mới bằng cách đưa giá trị rear về 0 để thêm phần tử vào khoảng trống
+Với Circle Queue, rear có thể nhỏ hơn front vì hàng đợi có thể xoay vòng 
+```cpp
+#include <stdio.h>
+#include <stdlib.h>
+
+
+typedef struct Queue {
+    int* items;
+    int size;
+    int front, rear;
+} Queue;
+
+void initialize(Queue *queue, int size) 
+{
+    queue->items = (int*) malloc(sizeof(int)* size);
+    queue->front = -1;
+    queue->rear = -1;
+    queue->size = size;
+}
+
+int is_empty(Queue queue) {
+    return queue.front == -1;
+}
+
+int is_full(Queue queue) {
+    return (queue.rear + 1) % queue.size == queue.front;
+}
+
+void enqueue(Queue *queue, int value) {
+    if (!is_full(*queue)) {
+        if (is_empty(*queue)) {
+            queue->front = queue->rear = 0;
+        } else {
+            queue->rear = (queue->rear + 1) % queue->size;
+        }
+        printf("Enqueue element %d\n",value);
+        queue->items[queue->rear] = value;
+    } else {
+        printf("Can't Enqueue. Queue overflow\n");
+    }
+}
+
+int dequeue(Queue *queue) {
+    if (!is_empty(*queue)) {
+        int dequeued_value = queue->items[queue->front];
+        if (queue->front == queue->rear) {
+            queue->front = queue->rear = -1;
+        } else {
+            queue->front = (queue->front + 1) % queue->size;
+        }
+        return dequeued_value;
+    } else {
+        printf("Can't Dequeue. Queue underflow\n");
+        return -1;
+    }
+}
+
+int front(Queue queue) {
+    if (!is_empty(queue)) {
+        printf("Front: %d", queue.front);
+        return queue.items[queue.front];
+    } else {
+        printf("Queue is empty");
+        return -1;
+    }
+}
+
+int rear(Queue queue) {
+    if (!is_empty(queue)) {
+        printf("Rear: %d", queue.rear);
+        return queue.items[queue.rear];
+    } else {
+        printf("Queue is empty");
+        return -1;
+    }
+}
+
+
+int main() {
+    Queue queue;
+    
+    int num = 3;
+
+    initialize(&queue, num);
+
+    printf(" -- element: %d\n", front(queue));           
+    printf(" -- element: %d\n", rear(queue));
+
+    enqueue(&queue, 10);                                    
+    enqueue(&queue, 25);                                    
+    enqueue(&queue, 37);  
+    enqueue(&queue, 27);                                   
+
+    printf(" -- element: %d\n", front(queue));
+    printf(" -- element: %d\n", rear(queue));
+
+    printf("Dequeue element: %d\n", dequeue(&queue));       
+    printf("Dequeue element: %d\n", dequeue(&queue));       
+
+    printf(" -- element: %d\n", front(queue));
+    printf(" -- element: %d\n", rear(queue));
+
+    enqueue(&queue, 40);                                    
+    enqueue(&queue, 50);     
+    enqueue(&queue, 60);                                
+
+    printf(" -- element: %d\n", front(queue));           
+    printf(" -- element: %d\n", rear(queue));
+
+    printf("Dequeue element: %d\n", dequeue(&queue));      
+    
+    printf(" -- element: %d\n", front(queue));           
+    printf(" -- element: %d\n", rear(queue));
+
+    printf("Dequeue element: %d\n", dequeue(&queue));    
+    printf("Dequeue element: %d\n", dequeue(&queue));    
+    printf("Dequeue element: %d\n", dequeue(&queue));    
+    
+    return 0;
+}
+```
+Kết quả:
+```
+Queue is empty -- element: -1
+Queue is empty -- element: -1
+Enqueue element 10
+Enqueue element 25
+Enqueue element 37
+Can't Enqueue. Queue overflow
+Front: 0 -- element: 10
+Rear: 2 -- element: 37
+Dequeue element: 10
+Dequeue element: 25
+Front: 2 -- element: 37
+Rear: 2 -- element: 37
+Enqueue element 40
+Enqueue element 50
+Can't Enqueue. Queue overflow
+Front: 2 -- element: 37
+Rear: 1 -- element: 50
+Dequeue element: 37
+Front: 0 -- element: 40
+Rear: 1 -- element: 50
+Dequeue element: 40
+Dequeue element: 50
+Can't Dequeue. Queue underflow
+Dequeue element: -1
+```
+Giải thích trên video
+
+</details>
 
 
 
