@@ -1298,7 +1298,8 @@ Dia chi bien 3: 0000006B557FF74C        Gia tri bien 3: 38229
 
 ## Bài 8: Memory Layout
 <details><summary>Xem</summary>
-Chương trình main.exe (trên window) được lưu ở bộ nhớ **SSD**, main.hex (nạp vào vi điều khiển) được lưu ở **FLASH**. Khi nhấn run chương trình trên window (cấp nguồn cho vi điều khiển) thì những chương trình này sẽ được copy vào bộ nhớ **RAM** để thực thi.
+ 
+Chương trình main.exe (trên window) được lưu ở bộ nhớ **SSD**, main.hex (nạp vào vi điều khiển) được lưu ở **FLASH** . Khi nhấn run chương trình trên window (cấp nguồn cho vi điều khiển) thì những chương trình này sẽ được copy vào bộ nhớ  **RAM** để thực thi.
 
 ### Phân vùng bộ nhớ (5 vùng)
 ![5 vùng](https://i.imgur.com/vHDjQuS.png)
