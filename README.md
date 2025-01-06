@@ -2151,6 +2151,413 @@ Giải thích trên video
 </details>
 
 
+## Bài 10: Linked List
+
+<details><summary>Xem</summary> 
+ 
+Các bước để xóa 1 phần tử trong mảng
+ - Đặt giá trị NULL tại vị trí cần xóa
+ - Dịch trái các phần tử phía sau vị trí đã xóa để lấp đi ô nhớ trống
+ - Thu hồi những ô nhớ trống ở cuối mảng.  
+ 
+ Vì vậy nếu mảng có nhiều phần tử sẽ phải mất nhiều lần để dịch trái các giá trị
+Tương tự với thêm phần tử vào mảng, phải dịch phải các phần tử phía sau vị trí đó và thêm giá trị mới vào giữa  
+Với mảng có nhiều phần tử thì việc thêm, xóa rất mất thời gian và phức tạp. Vì thế, **Linked List (Danh sách liên kết)** sẽ khắc phục vấn đề này.
+
+**Linked list** là một cấu trúc dữ liệu trong lập trình máy tính, được sử dụng để tổ chức và lưu trữ dữ liệu. Một linked list bao gồm một chuỗi các **nút** (nodes) được lưu ở những địa chỉ rời rạc, mỗi nút chứa **một giá trị dữ liệu** và **một con trỏ (pointer) đến nút tiếp theo** trong chuỗi để liên kết chúng lại với nhau. Vì thế, node cuối cùng có con trỏ là địa chỉ NULL
+![Linked List](https://i.imgur.com/7Ia2xwL.png)
+
+Có hai loại linked list chính:
+- Singly Linked List (Danh sách liên kết đơn): Mỗi nút chỉ chứa một con trỏ đến nút tiếp theo trong chuỗi.
+- Doubly Linked List (Danh sách liên kết đôi): Mỗi nút chứa hai con trỏ, một trỏ đến nút tiếp theo và một trỏ đến nút trước đó.
+
+Một linked list cung cấp một cách linh hoạt để thêm, xóa và chèn các phần tử mà không cần phải di chuyển toàn bộ dãy số như mảng. Tuy nhiên, nó cũng có một số nhược điểm, như việc cần thêm một con trỏ cho mỗi nút, tăng độ phức tạp của bộ nhớ và có thể dẫn đến hiệu suất kém hơn trong một số trường hợp so với mảng.
+
+
+Các hàm Linked List  
+Ở bài này, mình sẽ lập trình các hàm liên quan đến Singly linked List nên struct sẽ chỉ chứa hai thuộc tính là Data và Next
+```cpp
+typedef struct Node
+{
+    int data;          // Dữ liệu của nút
+    struct Node *next; // Con trỏ đến nút tiếp theo trong danh sách, node đó cũng chứa dữ liệu và địa chỉ của con trỏ kết tiếp
+} Node;
+```
+1. Khởi tạo List
+```cpp
+Node *createNode(int value) // Trả về địa chỉ node cấp phát từ hàm malloc (các địa chỉ được khởi tạo khác nhau)
+{
+    Node *node = (Node *)malloc(sizeof(Node));
+    node->data = value;
+    node->next = NULL;
+    return node; // trả về địa chỉ
+}
+```
+Tạo mảng động để chức một Struct của Node gồm Data và Next, khởi tạo giá trị cho node và next = NULL vì chưa liên kết với node tiếp theo. Hàm này sẽ trả về địa chỉ Node.
+
+2. In List
+
+```cpp
+void printList(Node *head)
+{
+    Node *temp = head;
+    int i = 0;
+    while (temp != NULL)
+    {
+        printf("Node %d, Data = %d, Addr = %p_______nextAddr = %p\n", i, temp->data, temp, temp->next);
+        temp = temp->next;
+        i++;
+    }
+    printf("\n\n\n");
+}
+```
+Hàm in ra danh sách các Node. Mình sẽ tạo một Struct Temp để chứa tạm giá trị của các node được duyệt qua. Sau đó sẽ duyệt và in ra giá trị của node cho đến khi node trở thành rỗng.
+
+3. Thêm Node vào cuối list
+```cpp
+void push_back(Node **head, int value)
+{
+    Node *newNode = createNode(value);
+    if (*head == NULL)
+    {
+        *head = newNode;
+    }
+    else
+    {
+        printf("Push back node, Data: %d\n",value);
+        Node *p = *head;
+        while (p->next != NULL)
+            p = p->next;
+        p->next = createNode(value);
+    }
+}
+```
+Tham số truyền vào là con trỏ cấp hai để có khả năng thay đổi địa chỉ cũng như giá trị Node trong List.
+- Tạo một Node mới với giá trị truyền vào. 
+- Kiểm tra nếu List rỗng thì Node mới sẽ được gán vào Node đầu tiên của danh sách
+- Nếu không rỗng thì tạo một Node tạm ```p``` chứa giá trị các Node để khi duyệt qua các Node ```p = p->next;``` không xóa đị giá trị của List.
+- Duyệt đến khi chạm đến giá trị cuối thì tạo một Node mới
+4. Thêm Node mới vào đầu List
+```cpp
+void push_front(Node **head, int value) // Con trỏ cấp 2 cho phép thay đổi địa chỉ trỏ tới của Node, thay đổi địa chỉ của Node
+{
+    printf("Push front node, Data: %d\n",value);
+    Node *newNode = createNode(value);
+    newNode->next = *head;
+    *head = newNode;
+}
+```
+Tạo Node mới và gán newNode phía trước node đầu tiên của List, sau đó đặt newNode là node đầu của List đó
+5. Thêm Node vào vị trí bất kỳ
+```cpp
+void insert(Node **head, int value, int position)
+{
+    Node *newNode = createNode(value);
+    Node *temp = *head;
+    int i = 0;
+
+    while (temp->next != NULL && i != position - 1)
+    {
+        temp = temp->next;
+        i++;
+    }
+    if (i == position - 1)
+    {
+        printf("Insert node %d, Data: %d\n",i+1,value);
+        newNode->next = temp->next;
+        temp->next = newNode;
+    }
+    else
+        return;
+}
+```
+- Tạo Node mới và tạo một Node tạm để tránh ảnh hưởng đến List khi duyệt qua các phần tử
+- Kiểm tra nếu vị trí cần thêm lớn hơn số phần tử có trong danh sách thì bỏ qua.
+- Nếu vị trí cần thêm nằm trong danh sách thì đặt địa chỉ Node sau cho Node mới và đặt địa chỉ Node mới cho Node trước đó.
+6. Xóa Node cuối của danh sách
+```cpp
+void pop_back(Node **head) // Con trỏ cấp 2 cho phép thay đổi địa chỉ trỏ tới của Node, thay đổi địa chỉ của Node
+{
+    if (*head == NULL)
+        printf("Node is not available\n");
+
+    else
+    {
+        Node *temp = *head;
+        Node *preTemp = temp;
+        while (temp->next != NULL)
+        {
+            preTemp = temp;
+            temp = temp->next;
+        }
+        printf("Pop back node\n");
+        preTemp->next = NULL;
+        free(temp);
+    }
+}
+```
+Kiểm tra List có rỗng hay không. Sau đó:
+- Tạo Node tạm temp chứa Node hiện tại và một preNode chứa node phía trước
+- Duyệt cho đến phần tử cuối cùng
+- Xóa phần tử cuối cùng và đặt next của phần tử kề cuối là ```NULL``` để đặt thành BACK.
+7. Xóa Node đầu danh sách
+```cpp
+void pop_front(Node **head) // Con trỏ cấp 2 cho phép thay đổi địa chỉ trỏ tới của Node, thay đổi địa chỉ của Node
+{
+    if (*head == NULL)
+        printf("Node is not available\n");
+    else
+    {
+        printf("Pop front node\n");
+        Node *temp = *head;
+        *head = (*head)->next;
+        free(temp);
+    }
+}
+```
+Kiểm tra List có rỗng hay không
+- Đặt Node tạm bằng với Node đầu tiên trước khi xóa
+- Chuyển Node tiếp theo thành Node đầu tiên của List
+- Xóa Node tại địa chỉ temp (Node đầu cần xóa).
+
+8. Xóa Node tại vị trí bất kỳ 
+```cpp
+void erase(Node **head, int position)
+{
+    if (*head == NULL)
+        printf("Node is not available\n");
+
+    Node *temp = *head;
+    int k = 0;
+    while (temp->next != NULL && k != position - 1)
+    {
+        k++;
+        temp = temp->next;
+    }
+
+    if (k == position - 1)
+    {
+        printf("Erase node %d\n",k+1);
+        temp->next = temp->next->next;
+        free(temp->next);
+    }
+}
+```
+Kiểm tra List có rỗng hay không
+- Tạo biến tạm để Duyệt
+- Duyệt qua các Node cho đến khi tới Node cần Xóa
+- Đặt next của Node trước Node cần xóa thành địa chỉ của Node sau Node cần xóa.
+- Xóa Node.
+9. Hàm đọc vị trí đầu
+```cpp
+void front(Node *head)
+{
+    if (head == NULL)
+        printf("Node is not available\n");
+    else
+    {
+        printf("Front Node: Data = %d, Addr = %p_______nextAddr = %p\n", head->data, head, head->next);
+    }
+}
+```
+Kiểm tra Head có tồn tại hay không và đọc
+10. Hàm đọc vị trí cuối
+```cpp
+void back(Node *head)
+{
+    if (head == NULL)
+        printf("Node is not available\n");
+    else
+    {
+        while (head->next != NULL)
+            head = head->next;
+        printf("Back Node: Data = %d, Addr = %p_______nextAddr = %p\n", head->data, head, head->next);
+    }
+}
+```
+Duyệt đến vị trí cuối cùng và đọc
+
+11. Hàm đọc vị trí bất kỳ
+```cpp
+void get(Node *head, int position)
+{
+    int i = 0;
+    if (head == NULL)
+        printf("Node is not available\n");
+    else
+    {
+        while (head->next != NULL && i != position - 1)
+        {
+            head = head->next;
+            i++;
+        }
+        if (i == position - 1)
+        {
+            printf("Print Node %d: Data = %d, Addr = %p_______nextAddr = %p\n",i, head->data, head, head->next);
+        }     
+    }
+}
+```
+Duyệt đến vị trí ```position``` và đọc nếu position nằm trong danh sách
+
+12. Hàm kiểm tra List rỗng
+```
+int isEmpty(Node *head)
+{
+    if (head == NULL){
+        printf("Node is not available\n");
+        return 1;
+    }
+    return 0;
+    
+}
+```
+13. Hàm kiểm tra kích thước mảng
+```cpp
+void size(Node *head)
+{
+    
+    if (head == NULL)
+        printf("Node is not available\n");
+    else
+    {
+        int i = 0;
+        while (head != NULL)
+        {
+            head = head->next;
+            i++;
+        }
+        printf("Size of Linked List: %d\n",i);    
+    }
+}
+```
+**Các hàm không cần tác động đến List như chỉ đọc, kiểm tra thì tham số truyền vào là con trỏ cấp 1 để chặn khả năng làm thay đổi danh sách khi không cần thiết**
+
+Hàm main() kiểm tra hoạt động:
+```cpp
+int main(int argc, char const *argv[])
+{
+    Node *emptyList = NULL;
+    if(isEmpty(emptyList))
+        printf("List 1 is empty!\n");
+    
+    Node *head = createNode(2);
+    if(isEmpty(head))
+        printf("List 2 is empty!\n");
+    else {
+        Node *second = createNode(4);
+        Node *third = createNode(6);
+        
+        head->next = second;
+        second->next = third;
+
+        printList(head);
+
+        push_front(&head, 7);  printList(head);
+
+        push_back(&head, 10);  printList(head);
+
+        insert(&head, 3, 3);  printList(head);
+
+        insert(&head, 8, 1);  printList(head);
+
+        pop_back(&head);  printList(head);
+
+        pop_front(&head);  printList(head);
+
+        erase(&head, 2);  printList(head);
+
+        front(head);
+        back(head);
+        size(head);
+    }
+
+    return 0;
+}
+```
+
+Kết quả:
+```
+Node is not available
+List 1 is empty!
+Node 0, Data = 2, Addr = 0000019B831CCFD0_______nextAddr = 0000019B831CCFF0 
+Node 1, Data = 4, Addr = 0000019B831CCFF0_______nextAddr = 0000019B831CD070 
+Node 2, Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000000000000000 
+
+
+
+Push front node, Data: 7
+Node 0, Data = 7, Addr = 0000019B831CD090_______nextAddr = 0000019B831CCFD0 
+Node 1, Data = 2, Addr = 0000019B831CCFD0_______nextAddr = 0000019B831CCFF0 
+Node 2, Data = 4, Addr = 0000019B831CCFF0_______nextAddr = 0000019B831CD070 
+Node 3, Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000000000000000 
+
+
+
+Push back node, Data: 10
+Node 0, Data = 7, Addr = 0000019B831CD090_______nextAddr = 0000019B831CCFD0 
+Node 1, Data = 2, Addr = 0000019B831CCFD0_______nextAddr = 0000019B831CCFF0 
+Node 2, Data = 4, Addr = 0000019B831CCFF0_______nextAddr = 0000019B831CD070 
+Node 3, Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000019B831CCD90 
+Node 4, Data = 10, Addr = 0000019B831CCD90_______nextAddr = 0000000000000000
+
+
+
+Insert node 3, Data: 3
+Node 0, Data = 7, Addr = 0000019B831CD090_______nextAddr = 0000019B831CCFD0 
+Node 1, Data = 2, Addr = 0000019B831CCFD0_______nextAddr = 0000019B831CCFF0 
+Node 2, Data = 4, Addr = 0000019B831CCFF0_______nextAddr = 0000019B831CCF70 
+Node 3, Data = 3, Addr = 0000019B831CCF70_______nextAddr = 0000019B831CD070 
+Node 4, Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000019B831CCD90
+Node 5, Data = 10, Addr = 0000019B831CCD90_______nextAddr = 0000000000000000
+
+
+
+Insert node 1, Data: 8
+Node 0, Data = 7, Addr = 0000019B831CD090_______nextAddr = 0000019B831CCDD0
+Node 1, Data = 8, Addr = 0000019B831CCDD0_______nextAddr = 0000019B831CCFD0
+Node 2, Data = 2, Addr = 0000019B831CCFD0_______nextAddr = 0000019B831CCFF0
+Node 3, Data = 4, Addr = 0000019B831CCFF0_______nextAddr = 0000019B831CCF70
+Node 4, Data = 3, Addr = 0000019B831CCF70_______nextAddr = 0000019B831CD070
+Node 5, Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000019B831CCD90
+Node 6, Data = 10, Addr = 0000019B831CCD90_______nextAddr = 0000000000000000
+
+
+
+Pop back node
+Node 0, Data = 7, Addr = 0000019B831CD090_______nextAddr = 0000019B831CCDD0
+Node 1, Data = 8, Addr = 0000019B831CCDD0_______nextAddr = 0000019B831CCFD0
+Node 2, Data = 2, Addr = 0000019B831CCFD0_______nextAddr = 0000019B831CCFF0
+Node 3, Data = 4, Addr = 0000019B831CCFF0_______nextAddr = 0000019B831CCF70
+Node 4, Data = 3, Addr = 0000019B831CCF70_______nextAddr = 0000019B831CD070
+Node 5, Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000000000000000
+
+
+
+Pop front node
+Node 0, Data = 8, Addr = 0000019B831CCDD0_______nextAddr = 0000019B831CCFD0
+Node 1, Data = 2, Addr = 0000019B831CCFD0_______nextAddr = 0000019B831CCFF0
+Node 2, Data = 4, Addr = 0000019B831CCFF0_______nextAddr = 0000019B831CCF70
+Node 3, Data = 3, Addr = 0000019B831CCF70_______nextAddr = 0000019B831CD070
+Node 4, Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000000000000000
+
+
+
+Erase node 2
+Node 0, Data = 8, Addr = 0000019B831CCDD0_______nextAddr = 0000019B831CCFD0
+Node 1, Data = 2, Addr = 0000019B831CCFD0_______nextAddr = 0000019B831CCF70
+Node 2, Data = 3, Addr = 0000019B831CCF70_______nextAddr = 0000019B831CD070
+Node 3, Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000000000000000
+
+
+
+Front Node: Data = 8, Addr = 0000019B831CCDD0_______nextAddr = 0000019B831CCFD0
+Back Node: Data = 6, Addr = 0000019B831CD070_______nextAddr = 0000000000000000
+Size of Linked List: 4
+```
+
+</details>
+
 
 
 
