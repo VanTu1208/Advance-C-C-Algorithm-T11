@@ -2559,6 +2559,467 @@ Size of Linked List: 4
 </details>
 
 
+## Bài 11: JSON
+
+<details><summary>Xem</summary>  
+
+JSON là viết tắt của "JavaScript Object Notation" (Ghi chú về Đối tượng JavaScript). Đây là một định dạng truyền tải dữ liệu phổ biến trong lập trình và giao tiếp giữa các máy chủ và trình duyệt web, cũng như giữa các hệ thống khác nhau.
+
+JSON là một **chuỗi** được thiết kế để dễ đọc và dễ viết cho con người, cũng như dễ dàng để phân tích và tạo ra cho máy tính. Nó sử dụng một cú pháp nhẹ dựa trên cặp key - value, tương tự như các đối tượng và mảng trong JavaScript. Mỗi đối tượng JSON bao gồm một tập hợp các cặp "key" và "value", trong khi mỗi mảng JSON là một tập hợp các giá trị và **không có kích thước cố định**
+
+Ví dụ một Object
+```cpp
+char *json = “ 
+{ 
+  "name": "John Doe",
+  "age": 30,
+  "city": "New York",
+  "isStudent": false,
+  "grades": [85, 90, 78]
+}
+
+“
+
+```
+- ```name``` , ```age```,... được gọi là key, mặc định là dạng chuỗi
+- ```John Doe```, ```New York``` là value, có thể là số, ký tự hoặc một Object khác
+
+
+Sử dụng JSON với những trường hợp xử lý những chuỗi phức tạp, không có kích thước cố định
+
+**Các hàm xử lý chuỗi JSON**
+
+#### Tạo kiểu dữ liệu JSON
+```cpp
+typedef enum
+{
+    JSON_NULL,
+    JSON_BOOLEAN,
+    JSON_NUMBER,
+    JSON_STRING,
+    JSON_ARRAY,
+    JSON_OBJECT
+} JsonType;
+```
+Các kiểu dữ liệu như int, double, float đều được đại diện bằng kiểu ```JSON_NUMBER```. Tương tự với các kiểu dữ liệu khác.
+
+```cpp
+typedef struct JsonValue
+{
+    JsonType type;
+    union
+    {
+        int boolean;
+        double number;
+        char *string;
+        struct
+        {  
+            struct JsonValue *values;
+            size_t count;
+        } array;
+        struct
+        {
+            char **keys; 
+            struct JsonValue *values;
+            size_t count; 
+        } object;
+    } value;
+} JsonValue;
+```
+
+Dữ liệu được phân tích từ Json được lưu trong các biến đặt trong Union vì một thời điểm chỉ khởi tạo 1 biến và lưu vào vùng nhớ có kích thước tùy theo ``` JsonType type``` nên nếu tạo Struct thì các biến không liên quan sẽ bị lãng phí vùng nhớ
+
+Với mảng thì sẽ được lưu trong một Struct Array gồm ba thông số 
+- ```JsonValue *values```: Với Json, mỗi phần tử trong mảng sẽ có kiểu dữ liệu khác nhau nên phải đệ quy lại JsonValue, mảng ```value``` này sẽ chứa kiểu dữ liệu và giá trị của từng phần tử.
+- ```Count``` để tính số lượng phần tử
+
+Tương tự với mảng nhưng Object trong Json sẽ có thêm một thông số khác là ```char **keys```. Mỗi *keys là một chuỗi, được tập hợp bởi 1 mảng khác nên phải sử dụng con trỏ cấp 2 (mảng các chuỗi). Ví dụ: ```keys = ["name", "age", "city"];```
+
+#### Hàm phân tích JSON
+```cpp
+JsonValue *parse_json(const char **json)
+{
+    while (isspace(**json))
+    {
+        (*json)++;
+    }
+    switch (**json)
+    {
+    case 'n':
+        return parse_null(json);
+    case 't':
+    case 'f':
+        return parse_boolean(json);
+    case '\"':
+        return parse_string(json);
+    case '[':
+        return parse_array(json);
+    case '{':
+        return parse_object(json);
+    default:
+        if (isdigit(**json) || **json == '-')
+        {
+            return parse_number(json);
+        }
+        else
+        {
+            printf("Cấu trúc Json không chính xác!");
+            return NULL;
+        }
+    }
+}
+```
+Truyền vào con trỏ cấp 2 để có khả năng thay đổi địa chỉ mà con trỏ Json trỏ tới, để phục vụ duyệt qua các ký tự trong chuỗi.
+- Các hàm phân tích sẽ luôn kiểm tra khoảng trống để bỏ qua, chử xử lý các ký tự. Nếu gặp khoảng trống, sẽ tăng địa chỉ được trỏ tới để phân tích ký tự tiếp theo ```(*json)++```
+- Sau đó lấy giá trị tại địa chỉ được trỏ tới bằng cách giải tham chiếu 2 lần con trỏ Json ```**json``` và so sánh các ký tự bắt đầu của các kiểu dữ liệu để thực thi các hàm xử lý liên quan
+```cpp
+else
+  {
+      printf("Cấu trúc Json không chính xác!");
+      return NULL;
+  }
+```
+- Nếu không thể phân tích kiểu dữ liệu trong chuỗi Json (Ví dụ: %$^#) thì báo lỗi và trả NULL dừng chương trình.
+#### Hàm bỏ qua khoảng trắng
+```cpp
+static void skip_whitespace(const char **json)
+{
+    while (isspace(**json))
+    {
+        (*json)++;
+    }
+}
+```
+
+
+#### Hàm xử lý giá trị NULL
+```cpp
+JsonValue *parse_null(const char **json)
+{
+    skip_whitespace(json);
+    JsonValue *value = (JsonValue *)malloc(sizeof(JsonValue));
+    if (strncmp(*json, "null", 4) == 0)
+    {
+        value->type = JSON_NULL; 
+        *json += 4; 
+        return value;          
+    }
+    free(value);
+    return NULL;
+}
+```
+Bỏ qua giá trị khoảng trắng để xử lý các phần tử khác
+- Tạo trước một con trỏ trỏ tới vùng nhớ được cấp phát động bởi malloc có kích thước JsonValue để lưu giá trị.
+- So sánh 4 byte tiếp theo tính tự địa chỉ hiện tại của con trỏ Json để so sánh chuỗi đó có bằng với ```"null"``` hay không
+  - Nếu không phải null thì xóa bộ nhớ vừa cấp phát và trả về NULL (dừng chương trình)
+  - Nếu đúng là null thì đặt kiểu dữ liệu cho value là ```JSON_NULL``` và công địa chỉ Json lên 4 byte để tiếp tục đọc chuỗi tiếp theo. Trả về giá trị value gồm kiểu dữ liệu và giá trị(rỗng).
+
+#### Xử lý dữ liệu kiểu boolean
+```cpp
+JsonValue *parse_boolean(const char **json)
+{
+    skip_whitespace(json);
+    JsonValue *value = (JsonValue *)malloc(sizeof(JsonValue));
+    if (strncmp(*json, "true", 4) == 0)
+    {
+        value->type = JSON_BOOLEAN;
+        value->value.boolean = true;
+        *json += 4;
+    }
+    else if (strncmp(*json, "false", 5) == 0)
+    {
+        value->type = JSON_BOOLEAN;
+        value->value.boolean = false;
+        *json += 5;
+    }
+    else
+    {
+        free(value);
+        return NULL;
+    }
+    return value;
+}
+```
+Bỏ bước xóa khoảng trắng. Sau đó sẽ tạo một vùng nhớ để chứa dữ liệu được trỏ tới bởi ```value```
+Biến Boolean sẽ có hai giá trị là ```true``` hoặc ```false```
+- Nếu là ```true``` thì đặt kiểu dữ liệu là ```JSON_BOOLEAN``` và gán giá trị là ```true``` và cộng 4 ký tự để tiếp tục xử lấy
+- Tương tự với ```true``` nhưng ```false``` sẽ khởi tạo giá trị là ```false``` và tăng lên 5 ký thực
+Nếu giá trị phân tích sai cú pháp. Ví dụ ```fasle``` hoặc ```trul``` thì xóa vùng nhớ được tạo và trả về NULL
+
+#### Xử lý dữ liệu kiểu số
+```cpp
+JsonValue *parse_number(const char **json)
+{
+    skip_whitespace(json);
+    char *end;         
+    double num = strtod(*json, &end); 
+    if (end != *json)
+    {
+        JsonValue *value = (JsonValue *)malloc(sizeof(JsonValue));
+        value->type = JSON_NUMBER;
+        value->value.number = num;
+        *json = end;
+        return value;
+    }
+    return NULL;
+}
+```
+Hàm ```strtod(const char *str, char **endptr)``` có hai tham số 
+- str: chuỗi cần xử lý
+- end: Vị trí đầu tiên của chuỗi chứa giá trị khác số 0,1,2,...9. Ví dụ "123ab" thì end ở vị trí a
+Hàm sẽ trả về giá trị là một số double chứa số được xử lý từ chuỗi
+Sau đó sẽ kiểm tra vị trí của end so với vị trí hiện tại của Json.  
+
+Nếu không có số nào trong chuỗi thì vị trí của hai con trỏ là như nhau trả về NULL   
+Nếu có số trong chuỗi được xử lý: 
+- Tạo vùng nhớ để lưu giá trị
+- Gán kiểu dữ liệu ```JSON_NUMBER``` và giá trị vào vùng nhớ
+- Đặt địa chỉ json vào địa chỉ được trỏ tới của end
+
+#### Hàm xử lý chuỗi string
+```cpp
+JsonValue *parse_string(const char **json)
+{
+    skip_whitespace(json);
+
+    if (**json == '\"')
+    {
+        (*json)++;
+        const char *start = *json;
+        while (**json != '\"' && **json != '\0')
+        {
+            (*json)++;
+        }
+        if (**json == '\"')
+        {
+            size_t length = *json - start;                           // 3
+            char *str = (char *)malloc((length + 1) * sizeof(char));
+            strncpy(str, start, length);
+            str[length] = '\0';
+
+            JsonValue *value = (JsonValue *)malloc(sizeof(JsonValue));
+            value->type = JSON_STRING;
+            value->value.string = str;
+            (*json)++;
+            return value;
+        }
+    }
+    return NULL;
+}
+```
+- Kiểm tra ký tự tiếp theo là dấu ```\"``` tức bắt đầu 1 chuỗi và cộng thêm 1 ký tự nữa để xử lý
+- Tạo một con trỏ chứa địa chỉ bắt đầu của chuỗi đó
+- Sau đó, duyệt đến hết chuỗi 
+```
+while (**json != '\"' && **json != '\0')
+  { // Dich đến hết chuỗi
+      (*json)++;
+  }
+```
+- Lấy độ dài chuỗi duyệt được bằng địa chỉ đầu trừ địa chỉ cuối
+- Cấp phát bộ nhớ động theo độ dài vừa tìm được
+- Copy chuỗi vào vùng nhớ và thêm giá trị ```\0```(null) vào cuối chuỗi.
+- Sau cùng, khởi tạo kiểu dữ liệu và gán giá trị vào biến JsonValue
+
+Trả về NULL nếu xử lý lỗi
+
+#### Xử lý kiểu dữ liệu mảng
+```cpp
+JsonValue *parse_array(const char **json)
+{
+    skip_whitespace(json);
+    if (**json == '[')
+    {
+        (*json)++;
+        skip_whitespace(json);
+
+        JsonValue *array_value = (JsonValue *)malloc(sizeof(JsonValue));
+        array_value->type = JSON_ARRAY;
+        array_value->value.array.count = 0;
+        array_value->value.array.values = NULL;
+
+        while (**json != ']' && **json != '\0')
+        {
+            JsonValue *element = parse_json(json);
+            if (element)
+            {
+                array_value->value.array.count++;
+                array_value->value.array.values = (JsonValue *)realloc(array_value->value.array.values, array_value->value.array.count * sizeof(JsonValue));
+                array_value->value.array.values[array_value->value.array.count - 1] = *element;
+                free(element);
+            }
+            else
+            {
+                break;
+            }
+            skip_whitespace(json);
+            if (**json == ',')
+            {
+                (*json)++;
+            }
+        }
+        if (**json == ']')
+        {
+            (*json)++;
+            return array_value;
+        }
+        else
+        {
+            free_json_value(array_value);
+            return NULL;
+        }
+    }
+    return NULL;
+}
+```
+Mảng sẽ bắt đầu bằng ký tự ```[``` và kết thúc ```]```
+```cpp
+JsonValue *array_value = (JsonValue *)malloc(sizeof(JsonValue));
+array_value->type = JSON_ARRAY;
+array_value->value.array.count = 0;
+array_value->value.array.values = NULL;
+```
+Khởi tạo vùng nhớ chứa dữ liệu và số phần từ bằng 0 cũng như giá trị NULL
+
+Tiếp theo duyệt qua toàn bộ mảng và phân tích mảng bằng hàm xử lý Json ```parse_json(json)``` vì mảng có nhiều phần tử có kiểu dữ liệu khác nhau
+
+- Nếu phần tử tồn tại thì tăng số phần tử của mảng, tăng vùng nhớ của mảng theo số phần tử và gán giá trị của phần tử đó vào mảng JsonValue. Cuối cùng là xóa vùng nhớ tạm chứa phần tử khi duyệt.
+- Nếu phần tử không tồn tại thì thoát khỏi vòng lặp
+
+Sau cùng kiểm tra xem đã duyệt hết mảng hay chưa và trả về kiểu dữ liệu và giá trị của mảng. Nếu chưa duyệt hết mảng (Tức trong mảng chứa giá trị lỗi) thì xóa vùng nhớ được khởi tạo và trả về NULL.
+
+#### Xử lý Object 
+```cpp
+JsonValue *parse_object(const char **json)
+{
+    skip_whitespace(json);
+    if (**json == '{')
+    {
+        (*json)++;
+        skip_whitespace(json);
+
+        JsonValue *object_value = (JsonValue *)malloc(sizeof(JsonValue));
+        object_value->type = JSON_OBJECT;
+        object_value->value.object.count = 0;
+        object_value->value.object.keys = NULL;
+        object_value->value.object.values = NULL;
+
+        while (**json != '}' && **json != '\0')
+        {
+            JsonValue *key = parse_string(json);
+            if (key)
+            {
+                skip_whitespace(json);
+                if (**json == ':')
+                {
+                    (*json)++;
+                    JsonValue *value = parse_json(json);
+                    if (value)
+                    {
+                        object_value->value.object.count++;
+                        object_value->value.object.keys = (char **)realloc(object_value->value.object.keys, object_value->value.object.count * sizeof(char *));
+                        object_value->value.object.keys[object_value->value.object.count - 1] = key->value.string;
+
+                        object_value->value.object.values = (JsonValue *)realloc(object_value->value.object.values, object_value->value.object.count * sizeof(JsonValue));
+                        object_value->value.object.values[object_value->value.object.count - 1] = *value;
+                        free(value);
+                    }
+                    else
+                    {
+                        free_json_value(key);
+                        break;
+                    }
+                }
+                else
+                {
+                    free_json_value(key);
+                    break;
+                }
+            }
+            else
+            {
+                break;
+            }
+            skip_whitespace(json);
+            if (**json == ',')
+            {
+                (*json)++;
+            }
+        }
+        if (**json == '}')
+        {
+            (*json)++;
+            return object_value;
+        }
+        else
+        {
+            free_json_value(object_value);
+            return NULL;
+        }
+    }
+    return NULL;
+}
+```
+Tương tự như mảng nhưng bắt đầu và ký thúc bằng ký tự ```{}```
+
+Bỏ qua phần tử trống và khởi tạo một vùng nhớ chứa Object, thêm một thông số ```keys = NULL``` so với mảng
+```cpp
+JsonValue *object_value = (JsonValue *)malloc(sizeof(JsonValue));
+object_value->type = JSON_OBJECT;
+object_value->value.object.count = 0;
+object_value->value.object.keys = NULL;
+object_value->value.object.values = NULL;
+```
+
+Kiểm tra keys trực tiếp bằng hàm xử lý chuỗi, vì keys trong Json mặc định là một String ```JsonValue *key = parse_string(json)```
+
+Kiểm tra các ký tự ```:``` như cấu trúc của Object. Nếu sai thì trả về NULL
+
+Nếu hợp lệ thì tiếp tục xử lý kiểu dữ liệu của value ứng với từng key. Và nếu values hợp lệ thì 
+- Tăng vùng nhớ cho keys với kiểu dữ liệu *char
+- Tăng vùng nhớ chứa values ứng với mỗi key theo kiểu dữ liệu JsonValue.
+
+#### Hàm xóa JsonValue
+```cpp
+void free_json_value(JsonValue *json_value)
+{
+    if (json_value == NULL)
+    {
+        return;
+    }
+
+    switch (json_value->type)
+    {
+    case JSON_STRING:
+        free(json_value->value.string);
+        break;
+
+    case JSON_ARRAY:
+        for (size_t i = 0; i < json_value->value.array.count; i++)
+        {
+            free_json_value(&json_value->value.array.values[i]);
+        }
+        free(json_value->value.array.values);
+        break;
+
+    case JSON_OBJECT:
+        for (size_t i = 0; i < json_value->value.object.count; i++)
+        {
+            free(json_value->value.object.keys[i]);
+            free_json_value(&json_value->value.object.values[i]);
+        }
+        free(json_value->value.object.keys);
+        free(json_value->value.object.values);
+        break;
+
+    default:
+        break;
+    }
+}
+```
+Tùy theo kiểu dữ liệu mà JsonValue chứa sẽ có các phương pháp xóa khác nhau
+
+</details>
 
 
 
