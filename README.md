@@ -3023,6 +3023,133 @@ Tùy theo kiểu dữ liệu mà JsonValue chứa sẽ có các phương
 
 
 
+## Bài 11: Binary Search & File Operations
+
+<details><summary>Xem</summary>  
+
+### Linear Search
+
+Duyệt qua từng phần tử của mảng để xác định phần tử cần tìm.
+- Sử dụng nhiều vòng lặp để duyệt.
+- Tiêu hao thời gian khi số phần tử lớn.
+
+Để khắc phục nhược điểm này, **Binary Search** được tạo ra.
+
+
+### Binary Search
+
+- **Xắp xếp** mảng ban đầu theo thứ tự **tăng dần** hoặc giảm dần.
+- Dựa vào vị trí phần tử đầu và cuối của mảng, ta sẽ tìm vị trí ở giữa mảng để chia đôi mảng chứa phần tử cần tìm.
+- So sánh giá trị tại vị trí giữa với giá trị cần tìm, nếu giá trị cần tìm lớn hơn thì tiếp tục tìm kiếm mảng bên phải, ngược lại tìm kiếm mảng bên trái (với trường hợp sắp xếp mảng tăng dần).
+- Tiếp tục tìm vị trí giữa của mảng nhỏ vừa chia được và so sánh với giá trị cần tìm để đưa ra kết quả hoặc tiếp tục chia 2 mảng.
+
+Khi so sánh phần tử giữa nếu không phải giá trị cần tìm, mảng được chia sẽ bắt đầu bằng vị trí **LEFT=MID+1** hoặc kết thúc tại **RIGHT=MID-1** tùy theo hướng của mảng mới để tránh việc so sánh lại giá trị của MID.
+
+MID được tính bằng cách lấy trung bình vị trí đầu với vị trí cuối của mảng cần chia và **làm tròn xuống** nếu giá trị lẻ.
+
+**Nhược điểm**: Khi lần đầu tìm kiếm, cần phải qua bước sắp xếp mảng làm mất thời gian hơn so với Linear Search nhưng với lần thứ hai trở đi, không cần phải sắp xếp nên thời gian tìm kiếm sẽ rất nhanh.
+
+Ứng dụng trong các hoạt động cần sự đáp ứng nhanh như quản lý nhân viên,...
+
+```cpp
+int binarySearch(int *arr, int left, int right, int x)
+{
+    if (right >= left)
+    {
+        int mid = (right + left) / 2;
+
+        if (arr[mid] == x)
+            return mid;
+
+        if (x < arr[mid])
+            return binarySearch(arr, left, mid - 1, x);
+
+        return binarySearch(arr, mid + 1, right, x);
+    }
+    return -1;
+}
+```
+- Kiểm tra nếu ```right > left``` thì mảng lỗi, ngược lại thì sẽ tìm vị trí mid và so sánh để lựa chọn việc chia mảng ở bên trái hoặc bên phải để tiếp tục tìm kiếm.
+
+### Thao tác với File CSV
+
+File CSV (Comma-Separated Values) là một loại văn bản được sử dụng để lưu trữ và truyền tải dữ liệu có cấu trúc dưới dạng bảng, trong đó các dữ liệu của các cột được phân tách bằng dấu (,) hoặc một ký tự ngăn cách khác.
+
+![Ảnh 1](https://i.imgur.com/AJ0eIby.png)
+
+![Ảnh 2](https://i.imgur.com/ju2zHLK.png)
+
+Các hàm đọc File
+
+![Ảnh 3](https://i.imgur.com/vXQM9Kp.png)
+
+![Ảnh 4](https://i.imgur.com/IXgS2Xc.png)
+
+Ví dụ:
+```cpp
+#include <stdio.h>
+#include <stdlib.h>
+
+// Hàm tạo file CSV
+void createCSV(const char *filename) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        printf("Cannot create file.csv %s.\n", filename);
+        return;
+    }
+    fprintf(file, "ID,Name,Age\n"); // Ghi dòng tiêu đề vào file
+    fclose(file);
+}
+
+// Hàm ghi dữ liệu vào file CSV
+void writeDataToCSV(const char *filename, int id, const char *name, int age) {
+    FILE *file = fopen(filename, "a");
+    if (file == NULL) {
+        printf("Cannot open file %s.\n", filename);
+        return;
+    }
+    fprintf(file, "%d,%s,%d\n", id, name, age); // Ghi dữ liệu vào file
+    fclose(file);
+}
+
+// Hàm đọc dữ liệu từ file CSV
+void readCSV(const char *filename) {
+    FILE *file = fopen(filename, "r");
+    if (file == NULL) {
+        printf("Cannot open file %s.\n", filename);
+        return;
+    }
+
+    char line[100]; // Bộ đệm để đọc từng dòng
+    printf("Data file %s:\n", filename);
+    while (fgets(line, sizeof(line), file) != NULL) {
+        printf("%s", line); // In từng dòng ra màn hình
+    }
+    fclose(file);
+}
+
+int main() {
+    const char *file = "data.csv";
+
+    // Tạo file CSV
+    createCSV(file);
+
+    // Ghi dữ liệu vào file CSV
+    writeDataToCSV(file, 5, "John", 25);
+    writeDataToCSV(file, 2, "Alice", 30);
+    writeDataToCSV(file, 3, "Bob", 22);
+
+    // Đọc dữ liệu từ file CSV
+    readCSV(file);
+
+    return 0;
+}
+```
+
+Kết quả:
+
+![kq](https://i.imgur.com/5oQ01IH.png)
+</details>
 
 
 
