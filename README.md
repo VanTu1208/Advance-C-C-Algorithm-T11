@@ -3151,6 +3151,68 @@ Kết quả:
 ![kq](https://i.imgur.com/5oQ01IH.png)
 </details>
 
+## Bài 13: AUTOSAR Classic
+
+<details><summary>Xem</summary>  
+
+
+**AUTOSAR** (**AUT**omotive **O**pen **S**ystem **AR**chitecture) là một tiêu chuẩn toàn cầu cho phát triển phần mềm ô tô với mục tiêu là chuẩn hóa kiến trúc phần mềm cho các hệ thống điều khiển điện tử (ECU) trong ô tô, nhằm tăng tính khả chuyển, khả mở rộng và giảm chi phí phát triển.
+
+![Architechure](https://i.imgur.com/Cd7S24G.png)
+
+Các Task sẽ chạy song song với nhau và trong một thời điểm chỉ có 1 task được thực thi để tránh việc làm sai xót dữ liệu, tất cả các Task được quản lý thông qua hệ điều hành (Operating System).
+
+**So sánh**
+![Sosanh](https://i.imgur.com/FwJT071.png)
+
+- Các Task được viết song song nên có sự đồng nhất và khả năng tái sử dụng cao. Đồng thời việc bảo trì cũng dễ dàng hơn so với việc chương trình hoạt động tuần tự vì các Task được cấu hình riêng biệt.
+
+### Kiến trúc AUTOSAR
+
+Được chia làm 4 tầng
+- **Application Layer**: Bao gồm các thành phần phần mềm ứng dụng, thực hiện các chức năng cụ thể của xe (như kiểm soát động cơ, phanh, v.v).
+- **Runtime Environment(RTE)**: Là lớp trung gian giữa phần mềm ứng dụng và phần mềm cơ bản, giúp phần mềm ứng dụng có thể giao tiếp với nhau một cách chuẩn hóa (liên kết SWC và BSW).
+- **Basic Software (BSW)**: Là phần mềm cơ bản, bao gồm các thành phần phần mềm tiêu chuẩn để quản lý các chức năng hệ thống, giao tiếp và điều khiển phần cứng.
+- **Microcontroller** 
+
+#### Application Layer
+
+Bao gồm nhiều khối phần mềm ứng dụng (Software Component - SWC). **Mỗi SWC thực hiện 1 chức năng cụ thể** trong hệ thống ECU. Ví dụ: điều khiển động cơ, phanh, túi khí,...
+
+![anh](https://i.imgur.com/ECiUKwP.png)
+
+SWC chỉ quan tâm đến **logic** (tính toán số học, khởi động thế nào), không cần quan tâm đến phần cứng. Tuy nhiên, SWC vẫn có thể giao tiếp với nhau và giao tiếp với phần cứng thông qua RTE.
+
+#### Runtime Environment(RTE)
+
+RTE đóng vai trò trung gian, quan trọng trong việc kết nối các Software Components (SWC) trền tâng Application Layer và Basic Software (BSW) thông qua một kiến trúc trừu tượng.
+
+Chức năng:
+- **Truyền thông tin giữa các SWCs**: RTE cung cấp cơ chế truyền thông để các thành phần phần mềm (SWCs) có thể trao đổi dữ liệu hoặc gọi dịch vụ với nhau mà không cần biết chi tiết về các phần còn lại của hệ thống. 
+- **Kết nối SWCs với BSW**: RTE cung cấp giao diện để các SWCs có thể tương tác với BSW. Điều này giúp các SWCs có thể sử dụng các dịch vụ hoặc điều khiển phần cứng một cách dễ dàng.
+- Hỗ trợ việc lập lịch và điều phối thực thi của các SWCs theo các sự kiện hoặc chu kỳ định sẵn. 
+
+#### Basic Software
+Basic Software (BSW) là một trong ba thành phần chính của kiến trúc AUTOSAR, đóng vai trò nền tảng để hỗ trợ phần mềm ứng dụng (SWC) hoạt động trên phần cứng. BSW cung cấp các dịch vụ cơ bản như quản lý phần cứng, giao tiếp, chẩn đoán, và các dịch vụ hệ thống.
+
+BSW được chia thành 3 tầng:
+- Service Layer.
+- ECU Abstraction Layer.
+- Microcontroller Abstraction Layer - MCAL.
+
+**Service Layer**:
+Đây là lớp cao nhất trong BSW, cung cấp các dịch vụ hệ thống và tiện ích cho các phần mềm ứng dụng (SWC) và các lớp khác của BSW.
+Là nơi **lưu trữ hệ điều hành của hệ thống tại lớp (System Services)**. Các dịch vụ khác bao gồm quản lý thời gian thực, chẩn đoán, quản lý lỗi, quản lý nguồn, bộ nhớ v.v.
+
+**ECU Abstraction Layer**:
+Lớp này cung cấp một giao diện trừu tượng cho tất cả các thiết bị ngoại vi và phần cứng cụ thể của ECU. Nó ẩn đi sự khác biệt về phần cứng của các thiết bị ngoại vi khác nhau và cung cấp một giao diện tiêu chuẩn cho các lớp bên trên (Service Layer và SWC). **Là nơi giao tiếp BSW với tầng Application thông qua RTE**
+
+**MCAL (Microcontroller Abstraction Layer):**
+Đây là lớp thấp nhất trong BSW, cung cấp giao diện trừu tượng để tương tác trực tiếp với các thành phần phần cứng của vi điều khiển, chẳng hạn như bộ xử lý trung tâm (CPU), các thiết bị ngoại vi tích hợp (như ADC, PWM, UART), và các bộ định thời (timer).
+
+
+
+</details>
 
 
 
