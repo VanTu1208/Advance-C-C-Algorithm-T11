@@ -3151,7 +3151,7 @@ Kết quả:
 ![kq](https://i.imgur.com/5oQ01IH.png)
 </details>
 
-## Bài 13: AUTOSAR Classic
+## AUTOSAR Classic
 
 <details><summary>Xem</summary>  
 
