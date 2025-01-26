@@ -3215,6 +3215,355 @@ Lớp này cung cấp một giao diện trừu tượng cho tất cả các thi�
 </details>
 
 
+## Bài 13: Class
+
+<details><summary>Xem</summary>  
+
+Trong C++, từ khóa "class" được sử dụng để định nghĩa một lớp, là một cấu trúc dữ liệu tự định nghĩa có thể chứa dữ liệu và các hàm thành viên liên quan. 
+
+### Khai báo Class
+```cpp
+#include <iostream>
+using namespace std;
+
+class Test
+{
+
+private:
+    int thuocTinh_A;
+    float thuocTinh_B;
+
+public:
+    // Constructor có tham số, thực thi khi khởi tạo một đối tượng của Class, thường dùng để khởi tạo giá trị ban đầu của các thuộc tính
+
+    int age;
+    char *name;
+    float score;
+
+    Test(int init_A, float init_B, int init_age, char *init_name, float init_score)
+    {
+        thuocTinh_A = init_A;
+        thuocTinh_B = init_B;
+        age = init_age;
+        name = init_name;
+        score = init_score;
+    }
+
+    // Thiết lập giá trị các thuộc tính gián tiếp
+    void setThuocTinh_A(int value)
+    {
+        thuocTinh_A = value;
+    }
+
+    void setThuocTinh_B(int value)
+    {
+        thuocTinh_B = value;
+    }
+
+    // Lấy giá trị thuộc tính gián tiếp thông qua hàm
+    int getThuocTinh_A()
+    {
+        return thuocTinh_A;
+    }
+
+    float getThuocTinh_B()
+    {
+        return thuocTinh_B;
+    }
+
+    // Hiển thị giá trị hai thuộc tính của Class
+    void display()
+    {
+        cout << "Giá trị của A: " << thuocTinh_A
+             << "\nGiá trị của B: " << thuocTinh_B
+             << "\nTuổi: " << age
+             << "\nTên: " << name
+             << "\nĐiểm: " << score << endl;
+    }
+};
+
+int main()
+{
+    // Tạo đối tượng và khởi tạo giá trị cho hai thuộc tính
+    Test Test1(0, 0, 0, "", 0);
+
+    // Gọi phương thức in ra giá trị
+    Test1.display();
+
+    cout << endl
+         << endl;
+
+    // Thay đổi giá trị thuộc tính thông qua các hàm Public
+    Test1.setThuocTinh_A(1);
+    Test1.setThuocTinh_B(1);
+
+    Test1.age = 20;
+    Test1.name = "Van Tu";
+    Test1.score = 8.2;
+
+    Test1.display();
+
+    return 0;
+}
+```
+
+Các hàm trong Class được gọi là **phương thức**, các biến thì được gọi là **thuộc tính**. Các phương thức và thuộc tính có các mức độ triển khai khác nhau như:
+- Public: Các hàm khác có thể truy cập được các phương thức, thuộc tính từ bên ngoài lớp.
+- Private: Chỉ có khả năng truy cập từ bên trong lớp, bên ngoài muốn truy cập thì phải gián tiếp thông qua các hàm get, set.
+- Protected: Truy cập cục bộ trong Class hoặc các Class kế thừa.
+Các cách triển khai này nhằm mục đích đảm báo tính bảo mật cho các thuộc tính, phương thức trong Class bằng cách hạn chế quyền truy cập từ bên ngoài.
+
+Cấu trúc khai báo một Class
+```cpp
+class ClassName {
+private:
+    int thuoctinh1;
+    void phuongthuc1();
+protected:
+    int thuoctinh2;
+public:
+    ClassName() {}
+
+    ~ClassName(){}
+    
+    int thuoctinh3;
+    void phuongthuc2();
+};
+```
+Ngoài ra còn hai khái niệm khác của Class là **Constructor** và **Destructor**
+
+- Constructor được gọi khi một đối tượng của Class được khởi tạo, thường có chức năng cấu hính thông số ban đầu cho các thuộc tính của Class đó. Constructor là hàm có tên trùng với tên của Class Ví dụ trên ```ClassName() {}```
+- Ngược lại, Destructor sẽ được gọi khi một đối tượng được giải phóng. Tên hàm trùng với Class và có dấu ```~``` ở trước. Ví dụ ```~ClassName(){}```
+
+Để truy cập một thuộc tính thuộc kiểu Public:
+```cpp
+Test1.age = 20;
+Test1.name = "Van Tu";
+Test1.score = 8.2;
+```
+Ta sẽ trực tiếp lấy giá trị của thuộc tính đó thông qua cú pháp ```tenClass.tenThuocTinh```.
+
+Tương tự với các phương thức được gọi cũng có cú pháp ```tenClass.tenPhuongThuc()```.
+
+Nếu các phương thức và thuộc tính ở kiểu private mà các hàm bên ngoài muốn truy cập vào thì phải thông qua hàm set và get. Với ví dụ trên, có hai thuộc tính Private là ```thuocTinh_A``` và ```thuocTinh_B```
+
+Để cập nhật giá trị thuộc tính thì hàm khác bên ngoài Class phải gọi hàm 
+```cpp
+void setThuocTinh_A(int value)
+{
+    thuocTinh_A = value;
+}
+```
+để gián tiếp gán giá trị value vào giá trị của ```thuocTinh_A``` thông qua phương thức ```setThuocTinh_A```
+
+Tương tự với việc lấy giá trị của thuộc tính phải thông qua hàm ```get```
+```
+int getThuocTinh_A()
+{
+    return thuocTinh_A;
+}
+```
+Hàm này sẽ trả về giá trị của ```thuoctinh_A``` để gán vào một biến nào đó.
+
+
+
+### Truy cập Class thông qua con trỏ
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class Test {
+public:
+    int value;
+
+    void display() {
+        cout << "Giá trị của Value: " << value << endl;
+    }
+};
+
+int main() {
+    Test Test1;
+    Test* ptr = &Test1;  // Tạo con trỏ trỏ đến đối tượng Test1
+
+    ptr->value = 100;  // Thay đổi giá trị thuộc tính thông qua con trỏ
+
+    ptr->display();  // Gọi phương thức in ra giá trị value thông qua con trỏ
+
+    return 0;
+}
+```
+Với ví dụ trên, ta sẽ tạo một đối tượng tên ```Test1``` và tạo một đối tượng con trỏ ```ptr``` trỏ đến Test1.
+Khi đó để truy cập các thuộc tính của ```Test1``` thông qua ```ptr``` ta phải thay dấu ```.``` thành ```->```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Static
+
+### 5.1. Static property
+
+Khi một property trong class được khai báo với từ khóa static, thì tất cả các object sẽ dùng chung địa chỉ của property này.
+
+- Các đối tượng sử dụng dung một địa chỉ của thuộc tính, nên thuộc tính này có giá trị như nhau với các đối tượng khác nhau
+- Cần phải khởi tạo bên ngoài Class
+- Bạn có thể truy cập static property bằng cách sử dụng tên class hoặc thông qua một đối tượng của class.
+```cpp
+#include <iostream>
+using namespace std;
+
+class HinhChuNhat {
+
+public:
+    double chieuDai;
+    double chieuRong;
+    
+    static int var;
+};
+
+int HinhChuNhat::var;
+
+int main()
+{
+    HinhChuNhat hinh1;
+    HinhChuNhat hinh2;
+    HinhChuNhat hinh3;
+
+    HinhChuNhat::var = 2;
+
+    cout << "address of chieu dai: " << &hinh1.chieuDai << '\n'; 
+    cout << "address of chieu dai: " << &hinh2.chieuDai << '\n'; 
+    cout << "address of chieu dai: " << &hinh3.chieuDai << endl << endl; 
+
+    cout << "address of var hinh1: " << &hinh1.var << '\n'; 
+    cout << "address of var hinh2: " << &hinh2.var << '\n'; 
+    cout << "address of var hinh3: " << &hinh3.var << endl << endl; 
+
+
+    cout << "value of var hinh1: " << hinh1.var << '\n'; 
+    cout << "value of var hinh2: " << hinh2.var << '\n'; 
+    cout << "value of var hinh3: " << hinh3.var << endl << endl; 
+
+    hinh1.var = 3;
+
+    cout << "value of var hinh1: " << hinh1.var << '\n'; 
+    cout << "value of var hinh2: " << hinh2.var << '\n'; 
+    cout << "value of var hinh3: " << hinh3.var << endl << endl; 
+
+    return 0;
+}
+```
+Kết quả:
+```
+address of chieu dai: 0xd887fffa90
+address of chieu dai: 0xd887fffa80
+address of chieu dai: 0xd887fffa70
+
+address of var hinh1: 0x7ff622ca7030
+address of var hinh2: 0x7ff622ca7030
+address of var hinh3: 0x7ff622ca7030
+
+value of var hinh1: 2
+value of var hinh2: 2
+value of var hinh3: 2
+
+value of var hinh1: 3
+value of var hinh2: 3
+value of var hinh3: 3
+```
+Với kết quả trên ta thấy, địa chỉ của biến static var là như nhau giữa các đối tượng khác nhau và có thể thay đổi bằng hai cách giống với lý thuyết.
+
+
+Với thuộc tính Static, ta không thể khởi tạo trực tiếp bên trong Class, nhưng có một ngoại lệ đối với thuộc tính kiểu const.
+```cpp
+class MyClass {
+public:
+    static const int constValue = 10;  // Khởi tạo trực tiếp trong class
+};
+```
+
+### Static method
+
+Khi một method trong class được khai báo với từ khóa static:
+- Method này độc lập với bất kỳ đối tượng nào của lớp.
+- Method này có thể được gọi ngay cả khi không có đối tượng nào của class tồn tại.
+- Method này có thể được truy cập bằng cách sử dụng tên class thông qua toán tử ```::```.
+- Method này có thể truy cập các static property và các static method bên trong hoặc bên ngoài class.
+- Method có phạm vi bên trong class và không thể truy cập con trỏ đối tượng hiện tại.
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+class HinhChuNhat
+{
+public:
+    double chieuDai;
+    double chieuRong;
+    static int count;
+
+    HinhChuNhat(int dai, int rong)
+    {
+        chieuDai = dai;
+        chieuRong = rong;
+        count++;
+    }
+
+    ~HinhChuNhat(){
+        cout << "Dien tich: " << chieuDai * chieuRong << endl;
+    }
+
+    static void display()
+    {
+        cout << "Number of object: " << count << endl;
+    }
+};
+
+int HinhChuNhat::count = 0;
+
+int main()
+{
+    HinhChuNhat::display();
+
+    HinhChuNhat Hinh1(5, 3);
+    HinhChuNhat Hinh2(6, 1);
+
+    HinhChuNhat::display();
+
+    return 0;
+}
+
+
+
+```
+
+Kết quả:
+
+```
+Number of object: 0
+Number of object: 2
+Dien tich: 6
+Dien tich: 15
+```
+Với kết quả ta thấy, khi chưa khởi tạo đối tượng nào thì phương thức display có thể được gọi bởi Class.
+Đồng thời, Static Method có thể truy cập vào các thuộc tính dùng chung như biến ```count``` trên ví dụ
+
+</details>
 
 
 
