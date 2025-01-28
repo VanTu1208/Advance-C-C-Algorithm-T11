@@ -3567,6 +3567,476 @@ Với kết quả ta thấy, khi chưa khởi tạo đối tượng nào 
 
 
 
+## Bài 14: Object Oriented Programming - Lập trình hướng đối tượng (OOP)
+
+<details><summary>Xem</summary>  
+
+Lập trình hướng đối tượng là một phương pháp để giải quyết bài toán lập trình mà khi áp dụng thì code sẽ trở nên dễ phát triển và dễ bảo trì hơn. 
+Phương pháp này sẽ chia nhỏ chương trình thành các đối tượng và các mối quan hệ, mỗi đối tượng sẽ có các thuộc tính và phương thức. 
+OOP có 4 tính chất là là tính đóng gói, tính kế thừa, tính đa hình và tính trừu tượng.
+
+### Tính đóng gói
+
+Đây là kỹ thuật giúp bạn che giấu đi những thông tin bên trong đối tượng bằng cách sử dụng phạm vi truy cập private cho các thuộc tính, muốn giao tiếp hay lấy ra các thông tin của đối tượng thì phải thông qua các phương thức public, từ đó sẽ hạn chế được các lỗi khi phát triển chương trình.  
+
+Điều này giúp hạn chế được các truy xuất không hợp lệ tới các thuộc tính của đối tượng.  
+Giúp ẩn đi những thông tin không cần thiết về đối tượng.
+Cho phép bạn thay đổi cấu trúc bên trong lớp mà không ảnh hưởng tới lớp khác.
+
+Có ba mức đóng gói: Private, Protected và Public. Để các Class hoặc hàm khác truy cập vào các thuộc tính và phương thức kiểu Private phải thông qua các Getter và Setter đẫ được để cập ở bài trước
+
+Ví dụ:
+```cpp
+#include <iostream>
+#include <string>
+using namespace std;
+
+class SinhVien{
+    private:
+        string name;
+        int id;
+        float score;
+   
+    public:
+        SinhVien(){
+            static int ID = 1;
+            id = ID;
+            ID++;
+        }
+
+        void setName(string newName){   // setter method
+            // kiểm tra điều kiện
+            name = newName;
+        }
+
+        string getName(){   // getter method
+            return name;
+        }
+
+        void setScore(float newScore){   // setter method
+            // kiểm tra điều kiện
+            score = newScore;
+        }
+
+        float getScore(){   // getter method
+            return score;
+        }
+
+        int getID(){
+            return id;
+        }
+
+        void display(){
+            cout << "ID: " << getID() << endl;
+            cout << "Ten: " << getName() << endl;
+            cout << "Score: " << getScore() << endl;
+        }
+};
+
+int main(int argc, char const *argv[])
+{
+    SinhVien sv1, sv2;
+
+    sv1.setName("Trung");
+    sv1.setScore(9.2);
+    sv1.display();
+
+    cout << endl;
+
+    sv2.setName("Anh");
+    sv2.setScore(7.6);
+    sv2.display();
+    return 0;
+}
+
+```
+Với ví dụ trên, các thuộc tính về ```name```, ```ID```, ```score``` được đóng gói mức độ private và hàm main phải truy cập thông qua hàm setName, setScore tại public để thay đổi giá trị của từng đối tượng.
+
+### Tính kế thừa
+
+Tính kế thừa ( Inheritance) là khả năng sử dụng lại các property và method của một class trong một class khác. Ta chia chúng làm 2 loại là class cha và class con. Để kế thừa từ class khác, ta dùng ký tự ```:```.
+
+Có 3 kiểu kế thừa là public, private và protected. Những property và method được kế thừa từ class cha sẽ nằm ở quyền truy cập của class con tương ứng với kiểu kế thừa.
+
+#### Tính chất
+
+- Các member public của class cha vẫn sẽ là public trong class con.
+- Các member protected của class cha vẫn sẽ là protected trong class con.
+- Các member private của class cha không thể truy cập trực tiếp từ class con nhưng có thể được truy cập gián tiếp qua các phương thức public hoặc protected của class cha.
+
+#### Ví dụ
+```cpp
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class DoiTuong{
+    protected:
+        string ten;
+        int id;
+
+    public:
+        DoiTuong(){  
+            static int ID = 1;
+            id = ID;
+            ID++;
+        }
+
+        void setName(string _ten){
+            // check chuỗi nhập vào
+            ten = _ten;
+        }
+
+        void display(){
+            cout << "Tên: " << ten << endl;
+            cout << "ID: " << id << endl;
+        }
+};
+
+class SinhVien : public DoiTuong{
+    protected:
+        string chuyenNganh;
+
+    public:
+        void setChuyenNganh(string _nganh){
+            chuyenNganh = _nganh;
+        }
+
+        void display(){ // override
+            cout << "Tên: " << ten << endl;
+            cout << "ID: " << id << endl;
+            cout << "Chuyên ngành: " << chuyenNganh << endl;
+        }
+};
+
+class HocSinh : public DoiTuong{
+    protected:
+        string lop;
+   
+    public:
+        void setLop(string _lop){
+            lop = _lop;
+        }
+
+        void display(){ // override
+            cout << "Tên: " << ten << endl;
+            cout << "ID: " << id << endl;
+            cout << "Lớp: " << lop << endl;
+        }
+};
+
+class GiaoVien : public DoiTuong{
+    protected:
+        string chuyenMon;
+
+    public:
+        void setChuyenMon(string _mon){
+            chuyenMon = _mon;
+        }
+
+        void display(){ // override
+            cout << "Tên: " << ten << endl;
+            cout << "ID: " << id << endl;
+            cout << "Chuyên môn: " << chuyenMon << endl;
+        }
+};
+
+int main(int argc, char const *argv[])
+{
+
+    SinhVien sv1;
+    sv1.setName("Trung");
+    sv1.setChuyenNganh("Computer Engineering");
+    sv1.display();
+
+    cout << endl;
+
+    HocSinh hs1;
+    hs1.setName("Tuấn");
+    hs1.setLop("12A1");
+    hs1.display();
+
+    cout << endl;
+
+    GiaoVien gv1;
+    gv1.setName("Hải");
+    gv1.setChuyenMon("Lý");
+    gv1.display();
+    return 0;
+}
+```
+
+Với ví dụ trên, các Class SinhVien, HocSinh và GiaoVien kế thừa các thuộc tính ```ten``` và ```id``` kiểu protected của Class DoiTuong và các thuộc tính này chỉ có thể sử dụng nội bộ trong Class cha và các Class kế thừa.
+
+Ngoài ra, hàm set cũng có thể kế thừa thông qua các Class con và Constructor vẫn được gọi ra khi các đối tượng của Class kế thừa được khởi tạo.
+
+Kết quả:
+``` 
+Tên: Trung
+ID: 1
+Chuyên ngành: Computer Engineering
+
+Tên: Tuấn
+ID: 2
+Lớp: 12A1
+
+Tên: Hải
+ID: 3
+Chuyên môn: Lý
+```
+
+Khái niệm: Overwriting (Ghi đè phương thức)
+Định nghĩa: Trong C++, overwriting xảy ra khi lớp con định nghĩa lại một phương thức đã được khai báo trong lớp cha với cùng tên, cùng tham số và kiểu trả về.
+- Mục đích: Tùy chỉnh hoặc mở rộng hành vi của phương thức lớp cha trong lớp con.
+- Cú pháp:
+Phương thức của lớp cha phải được khai báo với từ khóa ```virtual``` để hỗ trợ ghi đè.
+Nếu muốn lớp con không cho phép tiếp tục ghi đè thêm nữa, có thể sử dụng từ khóa ```final```.
+
+Khái niệm này sẽ được hiểu rõ hơn trong bài sau
+
+### Tính đa hình
+
+Tính đa hình ( Polymorphism) có nghĩa là "nhiều dạng" và nó xảy ra khi chúng ta có nhiều class có liên quan với nhau thông qua tính kế thừa.  
+
+Tính đa hình có thể được chia thành hai loại chính:
+- Đa hình tại thời điểm biên dịch (Compile-time Polymorphism): Thực hiện nhờ cơ chế nạp chồng (OverLoading)
+    - Nạp chồng hàm (Function Overloading): Nhiều hàm có cùng tên nhưng khác tham số.
+    - Nạp chồng toán tử (Operator Overloading): Thay đổi cách hoạt động của các toán tử.
+- Đa hình tại thời điểm chạy (Run-time Polymorphism): Thực hiện nhờ cơ chế ghi đè phương thức (Overwriting).
+
+#### Đa hình tại thời điểm biên dịch
+
+**Nạp chồng hàm (Function Overloading)**
+```cpp
+#include <iostream>
+using namespace std;
+
+class AreaCalculator {
+public:
+    // Hàm tính diện tích hình vuông
+    int area(int side) {
+        return side * side;
+    }
+
+    // Hàm tính diện tích hình chữ nhật
+    int area(int length, int width) {
+        return length * width;
+    }
+
+    // Hàm tính diện tích hình tròn
+    double area(double radius) {
+        return 3.14159 * radius * radius;
+    }
+};
+
+int main() {
+    AreaCalculator s;
+
+    // Gọi các hàm nạp chồng
+    cout << "Diện tích hình vuông: " << s.area(5) << endl; // Gọi hàm area(int)
+    cout << "Diện tích hình chữ nhật: " << s.area(4, 6) << endl; // Gọi hàm area(int, int)
+    cout << "Diện tích hình tròn: " << s.area(3.5) << endl; // Gọi hàm area(double)
+
+    return 0;
+}
+```
+Với ví dụ về Function OverLoading, ta có ba hàm với cùng tên ```area``` nhưng kiểu dữ liệu trả về và tham số khác nhau. Vì thế, ta có thể từ một hàm mà tính toán được cả ba giá trị về diện tích của hình vuông, chữ nhật và hình tròn.
+
+**Nạp chồng toán tử (Operator Overloading): 
+```cpp
+#include <iostream>
+using namespace std;
+
+class Complex {
+private:
+    double real;   // Phần thực
+    double imag;   // Phần ảo
+public:
+    // Constructor
+    Complex(double r, double i){
+        real = r;
+        imag = i;
+    }
+
+    // Nạp chồng toán tử +
+    Complex operator+(const Complex& other) {
+        return Complex(real + other.real, imag + other.imag);
+    }
+
+    Complex operator-(const Complex& other) {
+        return Complex(real - other.real, imag - other.imag);
+    }
+
+    // Hàm hiển thị số phức
+    void display() const {
+        cout << real << " + " << imag << "i" << endl;
+    }
+};
+
+int main() {
+    Complex c1(5.0, 9.0); // Số phức c1 = 3 + 4i
+    Complex c2(1.5, 3.5); // Số phức c2 = 1.5 + 2.5i
+
+    // Sử dụng toán tử + đã nạp chồng
+    Complex c3 = c1 + c2;
+    Complex c4 = c1 - c2;
+    // Hiển thị kết quả
+    cout << "C1 = ";
+    c1.display();
+    cout << "C2 = ";
+    c2.display();
+    cout << "C1 + C2 = ";
+    c3.display();
+    cout << "C1 - C2 = ";
+    c4.display();
+
+    return 0;
+}
+```
+Kết quả:
+```
+C1 = 5 + 9i
+C2 = 1.5 + 3.5i
+C1 + C2 = 6.5 + 12.5i
+C1 - C2 = 3.5 + 5.5i
+```
+Cú pháp ```Complex operator+(const Complex& other)``` sẽ định nghĩa lại cách hoạt động của toán tử ```+``` khi áp dụng cho hai đối tượng của Class Complex để cộng hai số ảo. Kết quả sẽ trả về cộng hai phần thực và hai phần ảo lại với nhau ```Complex(real + other.real, imag + other.imag)```. Tương tự với phép trừ.
+
+### Đa hình tại thời điểm chạy - Ghi đè phương thức (OverWriting)
+
+```cpp
+#include <iostream>
+using namespace std;
+
+class Dad {
+public:
+    virtual void display() { // Phương thức ảo
+        cout << "Display từ lớp Dad" << endl;
+    }
+};
+
+class ConA : public Dad {
+public:
+    void display() override { // Ghi đè phương thức của lớp cha
+        cout << "Display từ lớp conA" << endl;
+    }
+};
+
+class Mom {
+public:
+    void display() { // Phương thức ảo
+        cout << "Display từ lớp Mom" << endl;
+    }
+};
+
+
+class ConB : public Mom {
+public:
+    void display() { // Ghi đè phương thức của lớp cha
+        cout << "Display từ lớp conB" << endl;
+    }
+};
+
+int main() {
+    
+    Dad* D;
+    ConA A;
+    D = &A;
+    
+    D->display(); 
+
+    Mom* M;
+    ConB B;
+    M = &B;
+
+    M->display();
+
+    return 0;
+}
+```
+
+Kết quả:
+```
+Display từ lớp conA
+Display từ lớp Mom
+```
+
+### Tính trừu tượng
+Tính trừu tượng đề cập đến việc ẩn đi các chi tiết cụ thể của một đối tượng và chỉ hiển thị những gì cần thiết để sử dụng đối tượng đó. Nó tập trung vào những gì đối tượng làm được (chức năng) thay vì cách nó làm (triển khai cụ thể).
+
+Tính trừu tượng giúp:
+- Đơn giản hóa thiết kế và tổ chức chương trình.
+- Tập trung vào các khía cạnh quan trọng và loại bỏ các chi tiết phức tạp.
+- Dễ bảo trì và mở rộng mã nguồn.
+
+```cpp
+#include <iostream>
+#include <string>
+#include <cmath>
+
+using namespace std;
+
+class GiaiPhuongTrinh{
+    private:	// a,b,c,x1,x2,delta: tính đóng gói
+        double a;
+        double b;
+        double c;
+        double x1;
+        double x2;
+        double delta;
+        void tinhNghiem(){	// tính trừu tượng
+            delta = b*b - 4*a*c;
+            if (delta < 0){
+                delta = -1;
+            }
+            else if (delta == 0){
+                x1 = x2 = -b/ (2*a);
+            }
+            else if (delta > 0){
+                x1 = (-b + sqrt(delta))/(2*a);
+                x2 = (-b - sqrt(delta))/(2*a);
+            }
+        }
+       
+    public:
+        void enterNumber(double num_a, double num_b, double num_c);
+        void printResult();
+
+};
+
+void GiaiPhuongTrinh::enterNumber(double num_a, double num_b, double num_c){
+    a = num_a;
+    b = num_b;
+    c = num_c;
+}
+
+void GiaiPhuongTrinh::printResult(){
+    tinhNghiem();
+    if (delta == -1){
+        cout << "PT vo nghiem" << endl;
+    }
+    else if (delta == 0){
+        cout << "PT co nghiem chung: " << x1 << endl;
+    }
+    else if (delta > 0){
+        cout << "PT co 2 nghiem: \n";
+        cout << "x1: " << x1 << endl;
+        cout << "x2: " << x2 << endl;
+    }
+}
+int main()
+{
+  GiaiPhuongTrinh phuongtrinh1;
+  phuongtrinh1.enterNumber(1,5,4);
+  phuongtrinh1.printResult();
+  return 0;
+}
+```
+Với ví dụ trên, Class đã đóng gói các bước giải phương trình vào Private và ẩn đi chúng. Chỉ để cập đến hai chức năng là nhập giá trị đầu vào và in ra kết quả nghiệm của phương trình. Đơn giản hóa quá trình hoạt động của chương trình.
+
+
+</details>
 
 
 
