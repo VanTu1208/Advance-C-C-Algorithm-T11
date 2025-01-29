@@ -4494,6 +4494,279 @@ Day la lop D
 </details>
 
 
+## Bài 16: Namespace
+<details><summary>Xem</summary>  
+
+Xét một tình huống, khi chúng ta có hai người cùng tên là Trung trong cùng lớp. Bất cứ khi nào cần phân biệt họ một cách rõ ràng, chúng ta sẽ phải sử dụng thông tin bổ sung cùng với tên của họ, ví dụ: vị trí họ sống hay tên cha mẹ của họ...
+
+Tình huống tương tự xảy ra trong C++. Ví dụ: Code bạn đang viết có hàm tên là test() và có thư viện khác có sẵn mà cũng có hàm test(). Bây giờ, trình biên dịch không biết phiên bản nào của hàm mà bạn muốn sử dụng trong code của mình.
+
+Để giải quyết vấn đề này, chúng ta sẽ sử dụng **Namespace**
+
+Namespace không phải là định nghĩa một kiểu dữ liệu mới mà  là cách nhóm các đối tượng như biến, hàm, class,... vào một không gian tách biệt.
+
+Namespace được sử dụng với mục đích là để tránh xung đột tên khi có các định danh giống nhau được khai báo trong các phần của chương trình hoặc các thư viện khác nhau.
+
+Cú pháp:
+```cpp
+namespace name_Namespace {
+    //Hàm, biến
+}
+```
+Sử dụng:
+```cpp
+name_Namespace::nameFunction
+name_Namespace::nameVariable
+```
+
+
+Ví dụ:
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+namespace A{
+    char *name = (char*)"Van Tu";
+    float point = 9.2;
+    void display(){
+        cout << "Name: " << name;
+        cout << "  Point: " << point << endl;
+    }
+}
+
+namespace B{
+    char *name = (char*)"Thanh Tu";
+    float point = 8.1;
+    void display(){
+        cout << "Name: " << name;
+        cout << "  Point: " << point << endl;
+    }
+}
+
+int main(int argc, char const *argv[])
+{
+    cout << "Name: " << A::name << endl;
+    cout << "Name: " << B::name << endl;
+    cout << endl;
+    A::display();
+    B::display();
+    return 0;
+}
+```
+Với ví dụ trên, ta có hai Namespace A và B cùng chứa hai biến giống nhau là ```name``` và ```point``` nhưng không gây xung đột vì các biến này đặt tại hai không gian khác nhau. 
+
+Kết quả:
+```
+Name: Van Tu  
+Name: Thanh Tu
+
+Name: Van Tu  Point: 9.2
+Name: Thanh Tu  Point: 8.1
+```
+
+### Từ khóa Using trong Namespace
+
+Từ khóa using cho phép bạn sử dụng các phần tử trong namespace mà không cần phải sử dụng toán tử '::' mỗi khi truy cập.
+
+Thay vì sử dụng
+```std::cout << "Trung" << std::endl;``` ta có thể lượt bỏ đi ```std::``` thành cú pháp ```cout << "Trung" << endl;```
+
+
+
+Ý nghĩa trong việc rút gọn cú pháp tránh lặp tên không gian và làm cho mã dễ đọc hơn
+
+Nếu sử dụng Using cho nhiều Namespace, việc đó có thể gây ra lỗi tham chiếu không rõ ràng khi có hai phần tử trung lặp nhau ở hai không gian. Vì thế chỉ nên sử dụng với các Namespace mà phần tử của chúng là duy nhất.
+
+Ví dụ
+```cpp
+#include <iostream>
+
+using namespace std;
+
+namespace A{
+    char *name = (char*)"Trung 20";
+}
+
+namespace B{
+    char *name = (char*)"Trung 21";
+}
+
+using namespace A;
+
+// using namespace B; // error: tham chiếu không rõ ràng
+
+int main(int argc, char const *argv[])
+{
+    cout << "Name: " << name << endl;
+    cout << "Name: " << B::name << endl;
+    return 0;
+}
+```
+
+Kết quả:
+```
+Name: Trung 20
+Name: Trung 21
+``` 
+Khi gọi biến name thì sẽ mặc định truy cập vào Namespace A vì có sử dụng từ khóa Using.
+
+
+
+### Namespace lồng nhau
+
+Namespace lồng nhau (nested namespace) là khi bạn khai báo một namespace bên trong một namespace khác. Điều này giúp tổ chức mã nguồn tốt hơn, đặc biệt trong các dự án lớn.
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+namespace A{
+    char *name = (char*)"space A";
+
+    namespace C{
+        char *str = (char*)"space C";
+    }
+}
+
+namespace B{
+    char *name = (char*)"space B";
+}
+
+using namespace A::C;
+
+int main(int argc, char const *argv[])
+{
+    cout << "Name: " << A::name << endl;
+    cout << "Name: " << B::name << endl;
+    cout << "Name: " << str << endl;
+    
+    return 0;
+}
+
+```
+Ví dụ trên ta có Namespace C được lồng trong Namespace A.
+Đồng thời nếu muốn sử dụng trực tiếp C thì ta phải sử dụng Using theo cú pháp ```using namespace A::C```
+
+Mặc dù sử dụng trực tiếp C nằm trong A, nhưng ta không thể sử dụng các phần tử nằm ngoài C trong A trực tiếp.
+
+### Namespace mở rộng
+
+Namespace có thể được mở rộng bằng cách khai báo nhiều lần cùng một tên namespace trong các phần khác nhau của chương trình. Các khai báo này sẽ được ghép lại thành một namespace duy nhất.
+
+Ví dụ:
+```cpp
+#include <iostream>
+
+// Định nghĩa ban đầu của namespace MyNamespace
+namespace MyNamespace {
+    void sayHello() {
+        std::cout << "Hello from MyNamespace!" << std::endl;
+    }
+}
+
+// Mở rộng MyNamespace để thêm một hàm mới
+namespace MyNamespace {
+    void sayGoodbye() {
+        std::cout << "Goodbye from MyNamespace!" << std::endl;
+    }
+}
+
+int main() {
+    MyNamespace::sayHello();   // Gọi hàm từ phần đầu tiên
+    MyNamespace::sayGoodbye(); // Gọi hàm từ phần mở rộng
+    return 0;
+}
+```
+
+Kết quả:
+```
+Hello from MyNamespace!
+Goodbye from MyNamespace!
+```
+
+### Namespace C++ tiêu chuẩn (std);
+
+Một trong những namespace quan trọng và phổ biến nhất trong C++ là std. Tất cả các thành phần của thư viện chuẩn C++ (như cout, cin, vector, string) đều được định nghĩa bên trong namespace std.
+
+### Cấp phát bộ nhớ động trong C++
+
+```cpp
+#include <iostream>
+using namespace std;
+int main() {
+    // Cấp phát động một số nguyên
+    int* ptr1 = new int;  
+    int* ptr2 = new int(20);  
+    
+    
+    cout << "Value 1: " << *ptr1 << endl;
+    cout << "Value 2: " << *ptr2 << endl;
+
+    *ptr1 = 42;  
+
+    cout << "Value 1: " << *ptr1 << endl << endl;
+    
+    int num = 5;
+    int* ptrArr = new int[num];
+
+    for(int i = 0; i < num; i++){
+        ptrArr[i] = i*2;
+    }  
+
+    for(int i = 0; i < num; i++){
+        cout << "Arr[" << i << "]: " << ptrArr[i] << endl;
+    }  
+
+
+    // Giải phóng bộ nhớ
+    delete ptr1, ptr2;  
+
+    delete[] ptrArr;
+
+    return 0;
+}
+```
+Các vùng nhớ được khởi tạo sẽ nằm tại bộ nhớ heap
+
+```cpp
+#include <iostream>
+
+class Student {
+public:
+    std::string name;
+
+    // Constructor
+    Student(std::string n) { 
+        name = n; 
+    }
+
+    void display() { 
+        std::cout << "Student Name: " << name << std::endl; 
+    }
+};
+
+int main() {
+    // Cấp phát động một đối tượng Student
+    Student s1("Tu"); //Vùng nhớ được đặt tại bộ nhớ Stack
+    
+    Student* s2 = new Student("Hoai"); //Vùng nhớ được đặt tại bộ nhớ Heap
+
+
+    // Gọi phương thức của đối tượng
+    s1.display();
+    s2->display();
+    // Giải phóng bộ nhớ
+    delete s2;
+
+    return 0;
+}
+```
+
+
+</details>
 
 
 
