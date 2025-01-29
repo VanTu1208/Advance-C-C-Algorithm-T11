@@ -4040,6 +4040,458 @@ Với ví dụ trên, Class đã đóng gói các bước giải phương
 
 
 
+## Bài 15: Virtual Function
+<details><summary>Xem</summary>  
+
+Hàm ảo là một hàm thành viên được khai báo trong class cha với từ khóa virtual.  
+Khi một hàm là virtual, nó có thể được ghi đè (override) trong class con để cung cấp cách triển khai riêng.
+Khi gọi một hàm ảo thông qua một con trỏ hoặc tham chiếu đến lớp con, hàm sẽ được quyết định dựa trên đối tượng thực tế mà con trỏ hoặc tham chiếu đang trỏ tới chứ không dựa vào kiểu của con trỏ.
+- Override là việc ghi đè hàm ảo ở class con bằng cách định nghĩa lại nó. 
+- Khi một hàm ảo được ghi đè, hành vi của nó sẽ phụ thuộc vào kiểu của đối tượng thực tế, chứ không phải kiểu của con trỏ hay tham chiếu.
+- Tính đa hình Run-time xảy ra khi quyết định gọi hàm nào (phiên bản của class cha hay class con) được đưa ra tại thời điểm chạy, không phải lúc biên dịch, giúp mở rộng chức năng. Điều này giúp chương trình linh hoạt hơn, cho phép việc mở rộng chức năng mà không cần sửa đổi mã nguồn hiện tại.
+
+Ví dụ
+```cpp
+#include <iostream>
+using namespace std;
+
+class Animal {
+public:
+    virtual void makeSound() { // Hàm ảo
+        cout << "Animal makes a sound" << endl;
+    }
+};
+
+class Dog : public Animal {
+public:
+    void makeSound() override {
+        cout << "Dog gaugau" << endl;
+    }
+};
+
+class Cat : public Animal {
+public:
+    void makeSound() override {
+        cout << "Cat meows" << endl;
+    }
+};
+
+void playSound(Animal* a) {
+    a->makeSound(); // Gọi hàm ảo
+}
+
+int main() {
+    Dog d;
+    Cat c;
+    
+    playSound(&d); // Dog barks
+    playSound(&c); // Cat meows
+
+    return 0;
+}
+```
+Kết quả
+```
+Dog barks
+Cat meows
+```
+
+### Hàm thuần ảo (Pure Virtual Function)
+
+Hàm thuần ảo là một hàm ảo không có phần định nghĩa trong class cha, được khai báo với cú pháp = 0 và khiến class cha trở thành **lớp trừu tượng(abstract class)**, nghĩa là **không thể tạo đối tượng từ class** này.  
+Cú pháp
+```cpp
+class Base {
+public:
+    virtual void functionName() = 0; // Hàm ảo thuần túy
+};
+```
+
+Tính chất
+- Lớp có ít nhất một hàm ảo thuần túy trở thành "lớp trừu tượng" (abstract class).
+- Lớp trừu tượng không thể tạo đối tượng trực tiếp.
+-   Lớp con bắt buộc phải ghi đè (override) hàm ảo thuần túy, nếu không cũng trở thành lớp trừu tượng.
+- Lớp trừu tượng không nhất thiết phải chỉ chứa hàm ảo thuần túy, nó cũng có thể có hàm thông thường với phần thân.
+
+Ví dụ
+```cpp
+#include <iostream>
+using namespace std;
+
+class Shape {
+public:
+    virtual void draw() = 0; // Hàm ảo thuần túy
+};
+
+class Circle : public Shape {
+public:
+    void draw() override {
+        cout << "Drawing Circle" << endl;
+    }
+};
+
+class Square : public Shape {
+public:
+    void draw() override {
+        cout << "Drawing Square" << endl;
+    }
+};
+
+int main() {
+    
+    //Shape shapeA; Không thể tạo đối tượng cho lớp trừu tượng
+    
+    Shape* shape1;
+    Square h1;
+    shape1 = &h1;
+
+    Shape* shape2 = new Circle();
+
+    shape1->draw(); // Drawing Circle
+    shape2->draw(); // Drawing Square
+
+    delete shape2;
+
+    return 0;
+}
+```
+Kết quả: 
+```
+Drawing Circle
+Drawing Square
+```
+
+Class Shape là một Class trừu tượng nên không thể khai báo đối tượng mà chỉ tạo được con trỏ để trỏ đến địa chỉ của những lớp kế thừa. Các lớp này phải định nghĩa lại hàm draw() để không trở thành một Class trừu tượng khác.
+
+Ví dụ 2:
+```cpp
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class Xe
+{
+    protected:
+        string model;
+        int namSanXuat;
+
+    public:
+        Xe(string m, int nam): model(m), namSanXuat(nam){}
+
+        virtual void hienThiThongTin() = 0;
+};
+
+class Toyota : public Xe
+{
+    private:
+        string dongCo;
+
+    public:
+        Toyota(string m, int nam, string dongCo): Xe(m,nam), dongCo(dongCo){}
+
+        void hienThiThongTin() override
+        {
+            cout << "Hang xe: Toyota\n";
+            cout << "Model: " << model << "\n";
+            cout << "Nam san xuat: " << namSanXuat << "\n";
+            cout << "Dong co: " << dongCo << "\n";
+        }
+};
+
+class Honda : public Xe
+{
+    private:
+        string mauSac;
+
+    public:
+        Honda(string m, int nam, string mau): Xe(m,nam), mauSac(mau){}
+
+        void hienThiThongTin() override {
+            cout << "Hang xe: Honda\n";
+            cout << "Model: " << model << "\n";
+            cout << "Nam san xuat: " << namSanXuat << "\n";
+            cout << "Mau sac: " << mauSac << "\n";
+        }
+};
+
+class Mazda : public Xe
+{
+    private:
+        string loaiDanDong;
+
+    public:
+        Mazda(string m, int nam, string loaiDanDong): Xe(m,nam), loaiDanDong(loaiDanDong){}
+
+        void hienThiThongTin() override {
+            cout << "Hang xe: Mazda\n";
+            cout << "Model: " << model << "\n";
+            cout << "Nam san xuat: " << namSanXuat << "\n";
+            cout << "Loai dan dong: " << loaiDanDong << "\n";
+        }
+};
+
+int main(int argc, char const *argv[])
+{
+   
+    Mazda cx3("CX-3", 2019, "Dan dong 4 banh"); // stack
+
+    // Toyota toyota1("campry", 2020, "V6");   // 0x01
+    
+    Xe *ptr[] = {new Toyota("campry", 2020, "V6"),  // toyota("campry", 2020, "V6") // 0x01
+                 new Honda("civic", 2019, "do"),
+                 new Mazda("CX-5", 2021, "Dan dong 4 banh"),
+                 new Toyota("corolla", 2018, "I4 1.8L"),
+                 new Honda("accord", 2020, "den"),
+                 &cx3};
+   
+    for (int i=0; i<6; i++)
+    {
+        ptr[i]->hienThiThongTin();
+        cout << "--------------" << endl;
+        delete ptr[i];
+    }
+    return 0;
+}
+```
+Với ví dụ trên, có một Class trừu tượng là lớp Xe, ba lớp còn lại là ba lớp kế thừa lớp xe và các lớp này định nghĩa lại hàm thuần ảo ```hienThiThongTin()```
+
+Tại mảng ```Xe *ptr[]```, đây là mảng các con trỏ nên không thể truyền vào một đối tượng trực tiếp như ```Toyota toyota1("campry", 2020, "V6")``` mà phải truyền vào một con trỏ, vì thế ta có cú pháp ```new Honda("civic", 2019, "do")```
+### Đa kế thừa
+
+Đa kế thừa (Multiple Inheritance) là một tính năng trong C++ cho phép một lớp có thể kế thừa từ hai hoặc nhiều lớp cha cùng một lúc. Điều này cho phép lớp con thừa hưởng các thuộc tính và phương thức từ nhiều lớp cha, giúp kết hợp chức năng của nhiều Class.
+
+Cấu trúc:
+```cpp
+class Con : public Cha1, public Cha2, public Cha3 {
+    // Nội dung của lớp con
+};
+```
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+class Sensor{
+    public:
+        void initialize(){
+            cout << "Initializing sensor" << endl;
+            // code khởi tạo cảm biến
+        }
+
+        int readData(){
+            cout << "Reading sensor data" << endl;
+            // code đọc dữ liệu cảm biến
+            return 30;
+        }
+};
+
+class Communication{
+    public:
+        void setupCommunication() {
+            cout << "Setting up communication protocol" << endl;
+            // code thiết lập giao thức truyền thông (SPI, I2C, UART,...)
+        }
+
+        void sendData(int data) {
+            cout << "Sending data: " << data << endl;
+            // code gửi dữ liệu qua các giao thức
+        }
+};
+
+class Control : public Sensor, public Communication{
+    public:
+        Control(){
+            setupCommunication();
+
+            initialize();
+
+            int data = readData();
+
+            sendData(data);
+        }
+};
+
+int main(int argc, char const *argv[])
+{
+    Control sensorControl;
+    return 0;
+}
+```
+
+Ví dụ trên ta có hai Class Sensor và Comunication chưa những phương thức khác nhau. Và Class Control kế thừa cả hai Class này nên có thể sử dụng trực tiếp 4 phương thức trong Constructor của nó.
+
+Kết quả:
+```
+Setting up communication protocol
+Initializing sensor
+Reading sensor data
+Sending data: 30
+```
+
+**Vấn đề Diamond**  
+Khi nhiều lớp cha có các phương thức hoặc thuộc tính trùng tên, việc gọi chúng từ lớp con có thể gây ra sự nhầm lẫn.
+
+Khi một lớp con kế thừa từ hai lớp cha, mà hai lớp cha này đều cùng kế thừa từ cùng một lớp khác. Tình huống này tạo ra cấu trúc hình thoi (diamond), do đó được gọi là vấn đề "Diamond".
+
+Ví dụ
+```cpp
+#include <iostream>
+
+using namespace std;
+
+class A{
+    public:
+        A(){ cout << "Constructor A\n"; }
+
+        void hienThiA(){ cout << "Day la lop A\n"; }
+};
+
+class B : public A{
+    public:
+        B(){ cout << "Constructor B\n"; }
+
+        void hienThiB(){ cout << "Day la lop B\n"; }
+};
+
+class C : public A {
+    public:
+        C(){ cout << "Constructor C\n"; }
+
+        void hienThiC(){ cout << "Day la lop C\n"; }
+};
+
+class D : public B, public C{
+    public:
+        D(){ cout << "Constructor D\n"; }
+
+        void hienThiD(){ cout << "Day la lop D\n"; }
+};
+
+int main() {
+    D d;
+
+    // d.hienThiA(); // wrong
+
+    // Gọi phương thức từ lớp A qua B và C
+    d.B::hienThiA(); // Gọi hàm hienThiA từ lớp A thông qua B
+    d.C::hienThiA(); // Gọi hàm hienThiA từ lớp A thông qua C
+
+    // d.hienThiB();
+    // d.hienThiC();
+    // d.hienThiD();
+
+    return 0;
+}
+```
+Với ví dụ trên, ta có cấu trúc  
+- Một lớp A là lớp cha của hai lớp B và C.
+- Một lớp D kế thừa từ cả B và C.
+- D có hai bản sao của A, gây ra sự mơ hồ khi truy cập thành viên của A.
+Vì thế ghi ta lập trình
+```
+D d;
+d.hienThiA(); // Lỗi
+```
+thì d không biết gọi hàm ```hienthiA()``` từ A qua B hay qua C.
+
+Để khắc phục ta phải chỉ rõ phạm vi của hàm 
+```
+d.B::hienThiA(); // Gọi từ A thông qua B
+d.C::hienThiA(); // Gọi từ A thông qua C
+```
+Kết quả:
+```
+Constructor A
+Constructor B
+Constructor A
+Constructor C
+Constructor D
+Day la lop A 
+Day la lop A 
+Day la lop B
+Day la lop C
+Day la lop D
+```
+Ta thấy, khi khởi tạo một đối tượng lớp D, thì các ConStructor của A được thực thi hai lần, cho thấy Class D vẫn có hai bản sao của A, gây tốn bộ nhớ không cần thiết.
+
+Để khắc phục vấn đề này, ta sẽ sử dụng giải pháp **Kế thừa ảo**
+
+### Kế thừa ảo (Virtual Inheritance)
+
+- Kế thừa ảo giúp tránh vấn đề diamond problem trong đa kế thừa.
+- Chỉ có một bản sao duy nhất của lớp cơ sở chung được kế thừa.
+- Kế thừa ảo giúp quản lý các lớp liên quan đến phần cứng và giao tiếp. Điều này giúp tránh trùng lặp tài nguyên và quản lý hiệu quả trong hệ thống nhúng.
+
+Cú pháp
+```cpp
+class Cha {
+    // Nội dung lớp cha
+};
+
+class Con : virtual public Cha {
+    // Nội dung lớp con
+};
+```
+Ví dụ:
+```cpp
+#include <iostream>
+using namespace std;
+
+class A {
+public:
+    A() { cout << "Constructor A\n"; }
+    void hienThiA() { cout << "Day la lop A\n"; }
+};
+
+// Thêm virtual
+class B : virtual public A {
+public:
+    B() { cout << "Constructor B\n"; }
+    void hienThiB() { cout << "Day la lop B\n"; }
+};
+
+// Thêm virtual
+class C : virtual public A {
+public:
+    C() { cout << "Constructor C\n"; }
+    void hienThiC() { cout << "Day la lop C\n"; }
+};
+
+class D : public B, public C {
+public:
+    D() { cout << "Constructor D\n"; }
+    void hienThiD() { cout << "Day la lop D\n"; }
+};
+
+int main() {
+    D d;
+
+    d.hienThiA(); // Không còn lỗi, chỉ có một bản sao của A
+    d.hienThiB();
+    d.hienThiC();
+    d.hienThiD();
+
+    return 0;
+}
+```
+Ví dụ này có cấu trúc giống với ví dụ trên bị phát sinh về lỗi Diamond, nhưng đã được khắc phục thông qua kế thừa ảo. Lúc này, D chỉ có một bản sao duy nhất của Acủa  nên có thể gọi trục tiếp phương thức ```hienThiA()``` mà không phải thông qua B hoặc C. Đồng thời, Constructor của A cũng chỉ được gọi một lần.
+
+Kết quả:
+```
+Constructor A
+Constructor B
+Constructor C
+Constructor D
+Day la lop A
+Day la lop B
+Day la lop C
+Day la lop D
+```
+
+
+</details>
 
 
 
