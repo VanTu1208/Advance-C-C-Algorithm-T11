@@ -5318,3 +5318,289 @@ Nó giống như con trỏ, cho phép di chuyển qua các phần tử trong con
 
 
 
+## Bài 18: Template
+<details><summary>Xem</summary>  
+
+Template là một tính năng  cho phép lập trình viên viết mã tổng quát (generic code) mà có thể làm việc với nhiều kiểu dữ liệu khác nhau mà không cần viết lại nhiều lần. Nó giúp tăng tính tái sử dụng và linh hoạt của chương trình.
+
+### Function Template
+Trong C++, Function Templates giúp viết các function chung có thể được sử dụng cho nhiều kiểu dữ liệu khác nhau mà không cần phải triển khai nhiều phiên bản của cùng một function.
+
+Ví dụ
+```cpp
+#include <iostream>
+using namespace std;
+
+// Khai báo một function template
+template <typename T>
+T findMax(T a, T b) {
+    return (a > b) ? a : b;
+}
+
+int main() {
+    cout << findMax(10, 20) << endl;       // Dữ liệu kiểu int
+    cout << findMax(3.5, 2.8) << endl;     // Dữ liệu kiểu double
+    cout << findMax('A', 'Z') << endl;     // Dữ liệu kiểu char
+    return 0;
+}
+```
+
+```template <typename T>```: Khai báo một template với kiểu dữ liệu tổng quát T.  
+```T findMax(T a, T b)```: Hàm có thể hoạt động với bất kỳ kiểu dữ liệu nào (int, double, char,...).  
+Khi gọi hàm ```findMax(10, 20)```, trình biên dịch tự động suy luận kiểu T là int.  
+Tương tự, ```findMax(3.5, 2.8)``` suy luận T là double.
+
+Kết quả:
+```
+20
+3.5
+Z
+```
+
+### Class Template
+
+Class templates trong C++ là một khái niệm tương tự như function templates, nhưng được áp dụng cho class thay vì function. Class templates cho phép bạn viết một lớp chung mà có thể được sử dụng với nhiều kiểu dữ liệu khác nhau.
+
+Ví dụ:
+```cpp
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+template <typename T>
+class MyContainer {
+private:
+    T element;
+
+public:
+    MyContainer(T val) : element(val) {}
+
+    T getValue() const {
+        return element;
+    }
+};
+
+int main()
+{
+
+    MyContainer<int> intContainer(42);
+    MyContainer<double> doubleContainer(3.14);
+    MyContainer<string> stringContainer("Trung");
+
+    int intValue = intContainer.getValue();
+    double doubleValue = doubleContainer.getValue();
+    string stringValue = stringContainer.getValue();
+
+    cout << "int value: " << intValue << endl;
+    cout << "double value: " << doubleValue << endl;
+    cout << "string value: " << stringValue << endl;
+
+    return 0;
+}
+```
+Ví dụ trên sẽ tạo một Class sử dụng cho nhiều kiểu dữ liệu, có một Constructor để khởi tạo giá trị của ```element``` và một getter.
+
+Chúng ta sẽ kiểm tra kết quả với ba đối tượng thuộc ba kiểu dữ liệu khác nhau là int, double và string.
+
+Kết quả:
+```
+int value: 42
+double value: 3.14
+string value: Trung
+```
+
+## Các kỹ thuật template nâng cao trong C++
+### Non-Type Template Parameters (Tham số không phải kiểu dữ liệu)
+Ngoài typename T, template còn có thể nhận các tham số là giá trị hằng số.
+
+Ví dụ:
+```cpp
+#include <iostream>
+using namespace std;
+
+template <typename T, int N>
+class Array {
+private:
+    T arr[N];
+public:
+    void set(int index, T value) {
+        if (index >= 0 && index < N) {
+            arr[index] = value;
+        }
+    }
+    T get(int index) {
+        return arr[index];
+    }
+    int size() {
+        return N;
+    }
+
+    void print(){
+        for (int i = 0; i < N; i++) {
+            cout << arr[i] << " ";
+        }
+        cout << endl;
+    }
+};
+
+int main() {
+    Array<int, 5> arrInt;
+    arrInt.set(0, 10);
+    arrInt.set(1, 6);
+    arrInt.set(2, 3);
+    cout << "Kích thước mảng: " << arrInt.size() << endl;
+    arrInt.print();
+
+    Array<string, 3> arrString;
+    arrString.set(1, "Tu");
+    arrString.set(0, "Toan");
+    arrString.set(2, "Hung");
+
+    cout << "Kích thước mảng: " << arrString.size() << endl;
+    arrString.print();
+
+    return 0;
+
+}
+```
+
+```template <typename T, int N>```: N là tham số không phải kiểu, xác định kích thước mảng.  
+```Array<int, 5> arr;```: tạo một mảng có 5 phần tử kiểu int.
+
+Kết quả:
+```
+Kích thước mảng: 5
+10 6 3 32765 -272859112
+Kích thước mảng: 3
+Toan Tu Hung
+```
+### Template Metaprogramming (TMP)
+
+Template Metaprogramming (TMP) là một kỹ thuật lập trình trong C++ giúp thực hiện các tính toán ngay tại thời điểm biên dịch (compile-time) thay vì chạy tại thời điểm thực thi (runtime). 
+
+**Ứng dụng trong tính toán giai thừa tại thời điểm biên dịch**
+
+```cpp
+#include <iostream>
+using namespace std;
+
+// Template đệ quy để tính giai thừa tại compile-time
+template <int N>
+struct Factorial {
+    static const int value = N * Factorial<N - 1>::value;
+};
+
+// Trường hợp cơ sở: Factorial<0> = 1
+template <>
+struct Factorial<0> {
+    static const int value = 1;
+};
+
+int main() {
+    cout << "5! = " << Factorial<5>::value << endl; 
+    cout << "7! = " << Factorial<7>::value << endl; 
+    return 0;
+}
+```
+
+Trong khi biên dịch, chương trình sẽ tính toán giai thừa ```Factorial<5>::value```. Và lúc run-time chỉ cần in ra giá trị.
+```cpp
+template <int N>
+struct Factorial {
+    static const int value = N * Factorial<N - 1>::value;
+};
+```
+Tạo một Struct chứa giá trị của giai thừa trong biến Static Value, Struct có thể đọc mà không cần phải tạo đối tượng và biến này không thể thay đổi trong lúc chạy.
+
+```
+template <>
+struct Factorial<0> {
+    static const int value = 1;
+};
+```
+Gán biến Value của ```Factorial<0> = 1```
+
+Kết quả:
+```
+5! = 120
+7! = 5040
+```
+
+### Expression Templates
+Dùng để tối ưu hiệu suất của các biểu thức số học bằng cách tránh tạo ra các đối tượng trung gian không cần thiết.
+
+
+### Variadic Templates
+Tạo một hàm có thể chấp nhận số lượng tham số đầu vào không xác định.
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+void println()
+{
+    cout << endl;
+}
+
+template<typename T, typename... Rest>
+void println(T first, Rest... rest) {
+    cout << first << endl;
+    println(rest...);
+}
+
+
+template <typename... Args>
+void print(Args... args) {
+ (cout << ... << args) << '\n';
+}
+
+int main() {
+ print(1, 2, 3, "hello", 4.5, "Trung", 55);
+ cout << "-------------------- \n" ;
+ println(1, 2, 3, "hello", 4.5, "Trung", 55);
+ return 0;
+}
+
+```
+
+Giải thích:
+```cpp
+void println()
+{
+    cout << endl;
+}
+
+template<typename T, typename... Rest>
+void println(T first, Rest... rest) {
+    cout << first << endl;
+    println(rest...);
+}
+```
+- Hàm ```println()``` là hàm cơ sở, nếu hàm println được gọi khi không có tham số thì sẽ chạy hàm này.
+- ```T first``` là tham số đầu tiên của hàm ```println```, các tham số còn lại được chứa trong ```rest```. Hàm này sẽ in lần lượt các giá trị tham số và xuống dòng.
+
+```cpp
+template <typename... Args>
+void print(Args... args) {
+ (cout << ... << args) << '\n';
+}
+```
+- ```Args``` sẽ chứa tất cả các tham số truyền vào và in ra lần lượt không xuống dòng.
+
+Kết quả:
+```
+123hello4.5Trung55
+--------------------
+1
+2
+3
+hello
+4.5
+Trung
+55
+```
+
+
+</details>
