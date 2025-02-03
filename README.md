@@ -5604,3 +5604,716 @@ Trung
 
 
 </details>
+
+
+## Bài 19: Smart Pointer - Lambda
+<details><summary>Xem</summary>  
+
+### Lambda
+
+Các hàm được tạo sẽ có một vùng nhớ riêng và sẽ giữ lại trong suốt quá trình thực thi. Nhưng với các hàm chỉ hoạt động một lần duy nhất thì việc này làm tiêu tốn bộ nhớ. Vì thể ta sẽ có cú pháp khai báo riêng cho chúng.
+
+Lambda trong C++ là một cách để định nghĩa hàm vô danh (không cần khai báo tên hàm) ngay trong mã nguồn, thường dùng khi bạn chỉ cần hàm để sử dụng một lần hoặc trong một ngữ cảnh cụ thể mà không cần phải định nghĩa hàm ngoài.
+
+Tính chất:
+- Là hàm không có tên.
+- Định nghĩa trực tiếp trong một hàm khác
+- Cú pháp:  
+
+```cpp
+[capture] (parameter_list) -> return_type 
+{ 
+    //function_body 
+}
+```
+Hoặc 
+```
+```cpp
+[capture] (parameter_list)
+{ 
+    //function_body 
+}
+```
+  
+Không cần khai báo kiểu trả về, tự động suy diễn  
+Trong đó  
+- ```parameter_list```: Là các tham số truyền vào
+- ```return_type```: là kiểu trả về (int, void, class,...).
+- ```capture```: cho biết cách sử dụng các biến xung quang lambda
+    - ```[<name_variable>]```: chỉ định cụ thể biến sẽ sử dụng, **read-only**, kể cả toàn cục của hàm chứa Lambda.
+
+    - ```[=]```: cho phép sử dụng tất cả các biến xung quanh, **read-only**
+
+    - ```[&<name_variable>]```: truyền tham chiếu của biến cụ thể, có thể đọc/ghi
+
+    - ```[&]```: truyền tham chiếu của tất cả biến xung quanh
+
+    - Phối hợp cả hai kiểu.
+
+
+Ví dụ
+```cpp
+#include <iostream>
+
+using namespace std;
+
+int main(int argc, char const *argv[])
+{
+    int x = 1; // 0x01
+    int y = 2; // 0x05
+    int z = 3; // 0xf4
+
+    int a = 9;
+    int b = 2;
+
+    // Không sử dụng biến
+    auto sum = [](int a, int b)
+    {
+        return a + b;
+    };
+    cout << "Tổng 2 số: " << sum(a, b) << endl;
+
+    // Sử dụng hai biến x,y READ-ONLY
+    auto sub = [x, y](int a, int b)
+    {
+        return (a + b) - (x + y);
+    };
+    cout << "Hiệu a+b - (x+y): " << sub(a, b) << endl;
+
+    // Sử dụng tất cả các biến READ-ONLY
+    auto sumAll = [=](int a, int b)
+    {
+        return a + b + x + y + z;
+    };
+    cout << "Tổng tất cả: " << sum(a, b) << endl;
+
+    // Sử dụng biến y và z, READ-WRITE
+    auto sumChange = [&y, &z](int a, int b)
+    {
+        y = 15; // read - write
+        z = 9;  // read - write
+        return a + b + y + z;
+    };
+    cout << "Tổng sau khi thay đổi a+b+y+z: " << sumChange(a, b) << endl;
+
+    // Tham chiếu được tất cả các biến xung quanh
+    auto sumAll1 = [&](int a, int b)
+    {
+        x = 5;  // read - write
+        y = 10; // read - write
+        z = 1;  // read - write
+        return a + b + x + y + z;
+    };
+    cout << "Tổng tất cả: " << sumAll1(a, b) << endl;
+
+    // Kết hợp.
+    auto sumCombine = [x, &y, &z](int a, int b)
+    {
+        // x = 5;   // read - write
+        y = 10; // read - write
+        z = 1;  // read - write
+        return a + b + x + y + z;
+    };
+    cout << "Tổng kết hợp: " << sumCombine(1, 2) << endl;
+
+    // Lambda không có tham sôs
+
+    auto display = []()
+    {
+        cout << "Hello, world\n";
+    };
+
+    display();
+
+    // Sử dụng trực tiếp lambda
+    //Có tham số
+    cout << [](int a, int b)
+    {
+        return a + b;
+    }(2, 3)
+         << endl;
+    // Không tham số
+    []()
+    {
+        cout << "Hello, world\n";
+    }();
+
+    return 0;
+}
+```
+Kết quả:
+```
+Tổng 2 số: 11
+Hiệu a+b - (x+y): 8
+Tổng tất cả: 11
+Tổng tất cả: 27
+Tổng kết hợp: 19
+Hello, world
+5
+Hello, world
+```
+
+Ví dụ 2: 
+```cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+int main(int argc, char const *argv[])
+{
+    vector<int> vec = {2,15,4,6,5,3,8,1,9};
+
+    // sort(vec.begin(), vec.end(), greater<int>());
+
+    cout << "Vector ban đầu: ";
+
+    for (auto item : vec)
+    {
+        cout << item << " ";
+    }
+    cout << endl;
+
+    // sắp xếp tăng dần
+    sort(vec.begin(), vec.end(), [](int i, int j) -> bool
+    {
+        return i < j;
+    });
+
+    cout << "Vector sau khi sắp xếp: ";
+
+    for (auto item : vec)
+    {
+        cout << item << " ";
+    }
+    cout << endl;
+
+    cout << "Vector sau khi sắp xếp: ";
+
+    // sắp xếp giảm dần
+    sort(vec.begin(), vec.end(), [](int i, int j) -> bool
+    {
+        return i > j;
+    });
+
+    for (auto item : vec)
+    {
+        cout << item << " ";
+    }
+    cout << endl;
+
+
+    int count_even = 0;
+    int count_odd  = 0;
+
+    vector<int> evens, odds;
+
+
+    //vec.begin() và vec.end() xác định phạm vi của vector vec.
+    //count_if sẽ duyệt từng phần tử trong phạm vi này, truyền từng phần tử đó vào lambda [&](int x).
+    //x trong lambda là một tham số của hàm pred, được truyền vào từ count_if.
+    
+    count_if(vec.begin(), vec.end(), [&](int x)
+    {
+        if (x % 2 == 0)
+        {
+            count_even++;
+            evens.push_back(x);
+        } else {
+            count_odd++;
+            odds.push_back(x);
+        }
+
+        return false;
+    });
+
+
+    std::cout << "Số lượng số chẵn: " << count_even << endl;
+
+    for (auto i : evens)
+    {
+        cout << i << " ";
+    }
+
+    cout << endl;
+
+    cout << "Số lượng số lẻ: " << count_odd << endl;
+
+    for (auto i : odds)
+    {
+        cout << i << " ";
+    }
+
+    return 0;
+}
+
+```
+Ví dụ trên sẽ ứng dụng trục tiếp Lambda vào việc sắp xếp thứ tự của một vector  
+```cpp
+sort(vec.begin(), vec.end(), [](int i, int j) -> bool
+    {
+        return i < j;
+    });
+```
+
+Hàm này có ba tham số truyền vào ```sort(first, last, compare);```
+- First, last là con trỏ hoặc iterator trỏ đến phần tử đầu hoặc cuối trong phạm vi cần sắp xếp.
+- compare: Hàm so sánh, ```true``` không hoán đối vị trí, ```false``` hoán đổi vị trí. 
+- Hàm Lambda trả về true nếu i nhỏ hơn j, tức là giữ thứ tự hiện tại của i và j. Nếu i > j, sort sẽ hoán đổi vị trí của chúng.
+
+Tương tự với hàm sắp xếp giảm dần.
+
+
+Hàm tính số chẵn lẻ:
+```cpp
+count_if(vec.begin(), vec.end(), [&](int x)
+    {
+        if (x % 2 == 0)
+        {
+            count_even++;
+            evens.push_back(x);
+        } else {
+            count_odd++;
+            odds.push_back(x);
+        }
+
+        return false;
+    });
+```
+- vec.begin() và vec.end() xác định phạm vi của vector vec.
+- count_if sẽ duyệt từng phần tử trong phạm vi này, truyền từng phần tử đó vào lambda [&](int x).
+- x trong lambda là một tham số của hàm pred, được truyền vào từ count_if.
+- Nếu x chia hết cho hai thì là số chẵn.
+
+Kết quả:
+```
+Vector ban đầu: 2 15 4 6 5 3 8 1 9 
+Vector sau khi sắp xếp: 1 2 3 4 5 6 8 9 15
+Vector sau khi sắp xếp: 15 9 8 6 5 4 3 2 1
+Số lượng số chẵn: 4
+8 6 4 2
+Số lượng số lẻ: 5
+15 9 5 3 1
+```
+
+### Smart-Pointer
+
+Trong C++, smart pointers là một cơ chế quản lý bộ nhớ tự động giúp giảm thiểu rủi ro của lỗi liên quan đến quản lý bộ nhớ và giúp người lập trình tránh được việc quên giải phóng bộ nhớ đã được cấp phát.
+
+Smart-Pointer là một **Class** chứa một con trỏ và nhiều cơ chế để quản lý
+
+#### Unique Pointer
+- unique_ptr là một loại smart pointer trong C++, giúp quản lý bộ nhớ động và tự động giải phóng bộ nhớ khi không còn cần thiết. 
+- Đặc điểm chính của unique_ptr là khi một vùng nhớ được cấp phát thì chỉ có duy nhất một unique_ptr để quản lý, sở hữu vùng nhớ này, có thế lạ một đối tượng hoặc mảng và khi một unique_ptr bị hủy, bộ nhớ của đối tượng sẽ được tự động giải phóng.
+- Nếu một con trỏ muốn truy cập vùng nhớ đã được quản lý bởi một con trỏ khác. Thì còn trỏ đang quản lý vùng nhớ đó phải được gán giá trị Null.
+
+- **Unique chỉ ngăn các đối tượng unique pointer khác trỏ tới chứ không thể ngăn các con trỏ thông thường.**
+```cpp
+private:
+        T *ptr; /**< Con trỏ thô đến đối tượng được quản lý. */
+        
+
+    public:
+        /**
+         * @brief   Constructor khởi tạo con trỏ UniquePointer.
+         * @param   p   Con trỏ thô đến đối tượng. Giá trị mặc định là nullptr.
+         */
+        UniquePointer(T *p = nullptr) : ptr(p){}
+
+
+        /**
+         * @brief   Destructor giải phóng vùng nhớ của đối tượng được quản lý nếu không null.
+         */
+        ~UniquePointer()
+        {
+            if (ptr) delete ptr;
+        }
+```
+- Khi một Unique Pointer được khởi tạo, sẽ gán đối tượng cho nó hoặc gán mặc định giá trị NULL bằng Constructor
+- Và khi thu hồi sẽ thu hồi đối tượng được trỏ tới trước sau đó thu hồi con trỏ
+```cpp
+/**
+         * @brief   Copy Constructor - Xóa bỏ khả năng sao chép đối tượng UniquePointer.
+         */
+        UniquePointer(const UniquePointer &other) = delete;
+
+
+        /**
+         * @brief   Copy Assignment Operator - Xóa bỏ khả năng gán bằng copy đối tượng UniquePointer.
+         * @return  Trả về tham chiếu đến đối tượng UniquePointer hiện tại.
+         */
+        UniquePointer& operator = (const UniquePointer &other) = delete;
+```
+- Khi một con trỏ uptr2 được khởi tạo để copy uptr1 ```UniquePointer<int> uptr2(uptr1);``` thì Constructor của uptr2 sẽ thực thi để sao chép giá trị của uptr1 việc này vi phạm quy định chỉ duy nhất một con trỏ quản lý vùng nhớ. Vì thế sẽ bị lỗi được gọi là **Copy constructor**.
+
+- Tương tự với phép gán hai con trỏ
+    ```
+    UniquePointer<int> uptr2;
+        uptr2 = uptr1;
+    ```
+    Toán tử ```=``` sẽ được định nghĩa lại trong Class Unique Pointer để gán giá trị của hai con trỏ này. Nhưng việc này lại tiếp tục vi phạm quy định trên nhưng tại phép gán. Vì thế được gọi là **Copy Assignment Operator**
+
+
+```cpp
+/**
+         * @brief   Toán tử dereference để truy cập đối tượng được quản lý.
+         * @return  Tham chiếu đến đối tượng được quản lý.
+         */
+        T& operator * () const
+        {
+            return *ptr;
+        }
+
+
+        /**
+         * @brief   Toán tử để truy cập các thành phần của đối tượng.
+         * @return  Con trỏ đến đối tượng được quản lý.
+         */
+        T* operator -> () const
+        {
+            return ptr;
+        }
+```
+Định nghĩa lại các toán tử ```*``` để giải tham chiếu giá trị mà con trỏ thô ptr đang trỏ tới và toán tử ```->``` để trỏ đến địa chỉ của ptr, trỏ đến các đối tượng có trong Class hoặc Struct được trỏ tới.
+
+Sử dụng
+```cpp
+class Test 
+{
+    public:
+        int value;
+
+        Test(int val = 10) : value(val){}
+
+        void setValue(int newValue)
+        {
+            value = newValue;
+        }
+
+        int getValue() const
+        {
+            return value;
+        }
+
+        void display() const 
+        {
+            cout << "Test value: " << getValue() << endl;
+        }
+};
+
+int main(){
+    UniquePointer<int> uptr1 = new int(10);
+    cout << "new value of int: " << *uptr1 << endl;
+    
+    UniquePointer<Test> uptr = new Test(10);
+    uptr->display();
+    uptr->setValue(50);
+    uptr->display();
+
+    (*uptr).setValue(100);
+    (*uptr).display();
+
+
+}
+```
+
+Các Method có trong Class Unique Pointer
+```cpp
+T* get() const
+        {
+            return ptr;
+        }
+
+        
+        /**
+         * @brief   Chuyển quyền sở hữu đối tượng cho con trỏ thô bên ngoài.
+         * @return  Con trỏ thô đến đối tượng trước khi release.
+         */
+        T* release()
+        {
+            T* temp = ptr;  // lưu lại địa chỉ của đối tượng đang quản lý
+            ptr = nullptr;  // đặt con trỏ thô ptr thành con trỏ null
+            return temp;    // trả về địa chỉ của đối tượng
+        }
+
+        
+        /**
+         * @brief   Giải phóng đối tượng hiện tại và quản lý đối tượng mới.
+         * @param   p   Con trỏ thô đến đối tượng mới. Mặc định là nullptr.
+         */
+        void reset(T *newPtr = nullptr)
+        {
+            if (this->ptr) delete ptr;
+
+            ptr = newPtr;
+        }
+```
+- Hàm get() trả về con trỏ thô, tức là địa chỉ của đối tượng được trỏ đến
+- Hàm release() để chuyển quyền sở hữu cho một con trỏ khác bằng cách đặt con trỏ hiện tại thành NULL và trả về địa chỉ vùng nhớ để gán vào con trỏ khác.
+- Hàm reset() giải phóng đối tượng hiện tại khi không co tham số truyền vào hoặc quản lý đối tượng mới.
+```cpp
+        /**
+         * @brief   Move constructor chuyển nhượng quyền sở hữu con trỏ.
+         * @param   other   Đối tượng 'UniquePointer' cần chuyển nhượng quyền sở hữu.
+         */
+        UniquePointer(UniquePointer &&other) : ptr(other.ptr)
+        {
+            other.ptr = nullptr;
+        }
+
+
+        /**
+         * @brief   move assignment operator - Toán tử gán chuyển nhượng quyền sở hữu.
+         * @param   other   Đối tượng 'UniquePointer' cần chuyển nhượng quyền sở hữu.
+         */
+        UniquePointer& operator = (UniquePointer &&other)
+        {
+            if (this != &other)
+            {
+                // giải phóng đối tượng hiện tại
+                if (this->ptr) delete ptr;
+
+                // chuyển quyền sở hữu
+                this->ptr = other.ptr;
+                other.ptr = nullptr;
+            }
+
+            return *this;
+        }
+```
+
+Có hai cách chuyển quyền sỡ hữu con trỏ đến một đối tượng khác: Move Constructor và Move Assignment operator. Cả hai đều chuyển con trỏ tới một đối tượng được quản lý bởi con trỏ khác sau đó xóa con trỏ đó. Nhưng khác nhau về cách thực thi giữa Constructor và phép gán.
+
+Kiểm tra:
+```
+/* sử dụng move semantic để chuyển quyền sở hữu */
+UniquePointer<int> uptr2(move(uptr1));
+
+/* sử dụng move assignment operator để chuyển quyền sở hữu */
+UniquePointer<int> uptr3;
+uptr3 = move(uptr2);
+```
+
+#### Shared Pointed
+shared_ptr là một Smart pointer khác trong C++ và cũng giúp quản lý bộ nhớ động. Điểm đặc biệt của shared_ptr là nó sử dụng một bộ đếm tham chiếu để theo dõi số lượng shared_ptr đang tham chiếu đến một đối tượng, và chỉ giải phóng bộ nhớ khi không còn shared_ptr nào tham chiếu đến nó. Tức là nó cho phép một vùng nhớ được sở hữu bởi nhiều con trỏ khác nhau.
+
+Khác với Unique Pointer, Share Pointer có thêm một thuộc tính khác là bộ đếm tham chiếu
+```cpp
+T *ptr;              /**< Con trỏ thô đến đối tượng được quản lý. */
+size_t *ref_count;   /**< Bộ đếm tham chiếu. */
+```
+Bộ đếm này là một con trỏ vì nếu sử dụng biến thường thì mỗi khi khởi tạo một đối tượng sẽ cấp một vùng nhớ để lưu ```ref_count``` gây tiêu hao bộ nhớ và đếm không chính xác. Vì thế sử dụng con trỏ để chỉ trỏ đến một vùng nhớ duy nhất và cộng dồn giá trị này với mỗi đối tượng được khởi tạo.
+
+**Constructor:**
+```cpp
+/**
+* @brief Constructor khởi tạo SharedPointer.
+* @param p Con trỏ thô đến đối tượng. Giá trị mặc định là nullptr.
+*/
+SharedPointer(T *p = nullptr) : ptr(p), ref_count(p ? new size_t(1) : nullptr){}
+```
+- Giá trị mặc định của ```p``` là ```nullptr```, tức là nếu không truyền tham số, SharedPointer sẽ không trỏ đến đối tượng nào.
+- Nếu ```p``` khác ```nullptr```, cấp phát một ```size_t``` có giá trị 1 để đếm số tham chiếu.
+- Nếu ```p``` là ```nullptr```, con trỏ ```ref_count``` cũng là ```nullptr```.
+
+**Destructor:**
+
+```cpp
+void release_in()
+{
+    if (ref_count && --(*ref_count) == 0)
+    {
+        delete ptr;
+        delete ref_count;
+    }
+}
+~SharedPointer()
+{
+    release_in();
+}
+```
+- Nếu ```ref_count = 0 hoặc 1``` thì khi giải phóng thì sẽ giải phóng vùng nhớ được trỏ đến và giải phóng vùng nhớ chứa ```ref_count```
+
+**Copy Constructor:**
+```cpp
+/**
+* @brief Copy constructor tăng bộ đếm tham chiếu.
+* @param other Đối tượng SharedPointer cần sao chép.
+*/
+SharedPointer(const SharedPointer &other) : ptr(other.ptr), ref_count(other.ref_count)
+{
+    if (ref_count) (*ref_count)++;
+}
+```
+Khi khởi tạo con trỏ mới bằng cách Copy con trỏ đã có để quản lý chung vùng nhớ, Với Unique Pointer thì sẽ xóa con trỏ hiện tại để con trỏ mới được quản lý. Nhưng với Shared Pointer, sẽ gán con trỏ mới bằng với giá trị con trỏ hiện có và chỉ định chung vùng nhớ của biến ```ref_count``` và cộng biến này lên 1.
+
+**Toán tử gán**
+```cpp
+/**
+* @brief  Giải phóng tài nguyên và trả về con trỏ thô hiện tại.
+* @return Con trỏ thô đến đối tượng được quản lý trước khi giải phóng.
+*/
+T* release()
+{
+    T *temp = ptr;
+    ptr = nullptr;
+    if (ref_count && --(*ref_count) == 0)
+    {
+        delete ref_count;
+        ref_count = nullptr;
+    }
+    return temp;
+}
+
+/**
+* @brief  Toán tử gán bằng copy.
+* @param  other Đối tượng SharedPointer cần sao chép.
+* @return Tham chiếu đến đối tượng SharedPointer hiện tại.
+*/
+SharedPointer& operator = (const SharedPointer &other)
+{
+    if (this != &other)
+    {
+        release();
+        ptr = other.ptr;
+        ref_count = other.ref_count;
+        if (ref_count) (*ref_count)++;
+    }
+    return *this;
+}
+```
+
+- Kiểm tra hai con trỏ có khác nhau hay không để thực hiện phép gán
+- Gọi hàm ```release()``` để giảm số lượng bộ đếm tham chiếu của vùng nhớ đang trỏ vào để đổi con trỏ sang vùng nhớ khác, nếu ```ref_count``` vùng nhớ hiện có không còn con trỏ nào quản lý thì giải phóng.
+- Sau đó gán con trỏ hiện tại với con trỏ mới và tăng ```ref_count``` lên 1.
+
+Test:
+```cpp
+// Khởi tạo Shared Pointer 1
+    SharedPointer<int> sp1 = new int(100);
+    cout << "sp1 value: " << *sp1 << ", count: " << sp1.use_count() << endl;
+
+
+    // Khởi tạo Shared Pointer 2 (copy constructor)
+    SharedPointer<int> sp2(sp1);
+    cout << "sp2 value: " << *(sp2.get()) << ", count: " << sp2.use_count() << endl;
+
+
+    // Khởi tạo Shared Pointer 3 (copy assignment operator)
+    SharedPointer<int> sp3, sp4;
+    sp4 = sp1;
+    sp3 = sp1;
+    cout << "sp3 value: " << *sp3 << ", count: " << sp3.use_count() << endl;
+
+    
+    // Khởi tạo Shared Pointer 4 trong Lambda sau khi thoát khỏi hàm sẽ bị thu hồi
+    {
+        SharedPointer<int> sp4 = sp2;
+        cout << "sp4 value: " << *sp2 << ", count: " << sp1.use_count() << endl;
+    }
+
+    // Đếm số lượng shared pointer
+    cout << "count: " << sp2.use_count() << endl;
+
+
+    // Shared Pointer 1 & 2 không còn quản lý đối tượng
+    sp1.reset();
+    sp2.reset();
+
+
+    // chuyển quyền sở hữu đối tượng cho con trỏ thô mới
+    int *rawPtr = sp3.release();
+    cout << "raw pointer: " << *rawPtr << endl;
+    cout << "count Raw Pointer: " << sp3.use_count() << endl;
+    
+    cout << "count: " << sp1.use_count() << endl;
+```
+
+Kết quả:
+```
+sp1 value: 100, count: 1
+sp3 value: 100, count: 4
+sp4 value: 100, count: 5
+count: 4
+raw pointer: 100
+count Raw Pointer: 1
+count: 0
+```
+
+#### Weak Pointer
+
+weak_ptr là một cơ chế giữ tham chiếu yếu (weak reference) đến một **đối tượng được quản lý bởi shared_ptr**. Nó cung cấp một cách an toàn để theo dõi một đối tượng mà **không tăng bộ đếm tham chiếu của shared_ptr**. weak_ptr không trực tiếp truy cập đến đối tượng (object) mà nó theo dõi. 
+
+weak_ptr có một phương thức là lock(), mà trả về một shared_ptr. Nếu shared_ptr mà weak_ptr theo dõi vẫn tồn tại, lock() sẽ trả về một shared_ptr hợp lệ có thể sử dụng để truy cập đối tượng. Ngược lại, nếu shared_ptr đã bị giải phóng, lock() sẽ trả về một shared_ptr rỗng.
+
+**Constructor:**
+```cpp
+/**
+* @brief Constructor khởi tạo WeakPointer từ SharedPointer.
+* @param shared Đối tượng SharedPointer.
+*/
+WeakPointer(const SharedPointer<T> &shared) : ptr(shared.get()), ref_count(nullptr)
+{
+    ref_count = shared.use_count() ? new size_t(shared.use_count()) : nullptr;
+}
+```
+- Khởi tạo đối tượng mới từ Shared Pointer nhưng sẽ tạo một đối tượng mới ở vùng nhớ khác để chứa ```ref_count``` bằng 0 nếu shared pointer không quản lý đối tượng nào hoặc bằng ```ref_count``` của shared pointer nếu nó lớn hơn 0.
+
+**Method expired**
+```cpp
+/**
+* @brief  Kiểm tra xem WeakPointer có còn quản lý đối tượng không.
+* @return true nếu đối tượng không tồn tại, false ngược lại.
+*/
+bool expired() const
+{
+    return !ref_count || *ref_count == 0;
+}
+```
+Trả về true khi ```ref_count``` bằng 0 hoặc NULL. tức Weakpointer không còn quản lý đổi tượng nào.
+
+
+**Method Lock**
+```cpp
+/**
+* @brief  Chuyển WeakPointer thành SharedPointer nếu đối tượng còn tồn tại.
+* @return SharedPointer đến đối tượng hoặc SharedPointer trống nếu đối tượng không còn tồn tại.
+*/
+SharedPointer<T> lock() const
+{
+    return expired() ? SharedPointer<T>(nullptr) : SharedPointer<T>(ptr);
+}
+```
+Ép kiểu đối tượng hiện tại từ Weak Pointer thành Shared Pointed để có thể đọc giá trị.
+
+
+Tất cả các Class trên được tích hợp trong thư viện **<memory>**
+
+#### Một số phương thức mới:
+- ```make_unique``` Tạo một đối tượng mới được quản lý bởi một Unique_Pointer
+Ví dụ:
+```cpp
+unique_ptr<SpeedSensor> uptr = make_unique<SpeedSensor>(10);
+unique_ptr<SpeedSensor> uptr1(new SpeedSensor(10));
+```
+Cả hai dòng lệnh trên có chung ý nghĩa
+
+
+- Tương tự ta sẽ có ```make_shared```  
+Ví dụ:
+```
+shared_ptr<int> sptr1 = make_shared<int>(20);
+```
+- Hoán đổi hai đối tượng
+```cpp
+shared_ptr<int> a = make_shared<int>(40);   // 0xa1
+shared_ptr<int> b = make_shared<int>(50);   // 0xb3
+a.swap(b);
+```
+
+Bây giờ ```b``` sẽ quản lý ```40``` và ```a``` sẽ quản lý ```50```
+
+- ```a = move(b);```: Chuyển đối tượng được ```b``` quản lý sang ```a``` và ```b``` không còn quản lý đối tượng nào.
+
+</details>
