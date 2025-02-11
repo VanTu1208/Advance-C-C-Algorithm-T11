@@ -6317,3 +6317,401 @@ Bây giờ ```b``` sẽ quản lý ```40``` và ```a``` sẽ quản lý ```5
 - ```a = move(b);```: Chuyển đối tượng được ```b``` quản lý sang ```a``` và ```b``` không còn quản lý đối tượng nào.
 
 </details>
+
+
+
+## Bài 20: Design Patterns
+
+<details><summary>Xem</summary>  
+
+**Design Patterns** là các giải pháp tổng quát cho các vấn đề phổ biến trong phát triển phần mềm. Chúng là một dạng "công thức" giúp các lập trình viên xử lý các tình huống thường gặp trong quá trình thiết kế.
+
+Được chia thành ba loại:
+- **Creational Patterns (Mẫu khởi tạo)**: Quản lý việc khởi tạo đối tượng (VD: **Singleton**, **Factory**).
+- **Structural Patterns (Mẫu cấu trúc)**: Tổ chức cấu trúc của các lớp và đối tượng (VD: **Decorator**, Adapter, Composite).
+- **Behavioral Patterns (Mẫu hành vi)**: Xác định cách các đối tượng tương tác với nhau (VD: **Observer**, **MVP**,  Strategy).
+
+### Creational Patterns
+#### Singleton Pattern
+
+Khi lập trình với các thanh ghi như GPIO, Timer,... nó sẽ có địa chỉ cố định. Khi khởi tạo nhiều object thì object sẽ vào những  địa chỉ cố định trên để ghi giá trị. Khi khởi tạo nhiều object thì tốn nhiều tài nguyên trên RAM.
+
+**Singleton** là một mẫu thiết kế thuộc nhóm Creational (mẫu khởi tạo), nó đảm bảo rằng **một lớp chỉ có một đối tượng duy nhất được tạo ra**, và cung cấp một phương thức để truy cập đến đối tượng đó từ bất kỳ đâu trong chương trình.  
+Singleton thường sử dụng cho những hệ thống chỉ cần một phiên bản duy nhất như: kết nối cơ sở dữ liệu, bộ nhớ đệm (cache), logger để ghi log, hoặc cấu hình hệ thống.
+
+Các thành phần chính của Singleton:
+- **Private Constructor**: Đảm bảo rằng **không thể khởi tạo đối tượng từ bên ngoài lớp**.
+- **Static Instance**: Đây là đối tượng tĩnh duy nhất của lớp đó. **Không thể tạo ra nhiều hơn một đối tượng của lớp Singleton**.
+- **Static Method**: Phương thức để **truy cập đến đối tượng Singleton duy nhất** từ mọi nơi trong chương trình, có cấu trúc để ngăn việc tạo hai Object.
+
+```cpp
+#include <iostream>
+
+void gpioInit();
+
+void gpioSetPin(int pin, bool value);
+
+void gpioReadPin(int pin);
+
+class GpioManager{
+    private:
+        void init(){
+            gpioInit();
+        }
+         // Private Constructor 
+        GpioManager()
+        {
+            init();
+        }
+        
+        static GpioManager* instance; //Static Property, trỏ tới một Object duy nhất của Class.
+        
+    public:
+        static GpioManager *getInstace(){ //Static Method: Gọi trực tiếp thông qua Class.
+            if(instance == nullptr){// Chỉ khởi tạo đối tượng lần đầu tiên.
+                instance = new GpioManager();//Tao đối tượng được cấp phát động, địa chỉ được quản lý bởi con trỏ instance.
+                
+            }
+            return instance;// Trả về dịa chỉ đối tượng được cấp phát.
+        }
+        void setPin(int pin, bool value){
+            gpioSetPin(pin, value);
+        }
+        void readPin(int pin){
+            gpioReadPin(pin);
+        }
+};
+
+class PORTx{
+    private:
+        PORTx();
+        static PORTx* instance;
+        void init(){
+            //gpioInit();
+        }
+    public:
+        static PORTx *getInstace(){
+            if(!instance){
+                instance = new PORTx();
+                instance->init();
+            }
+            return instance;
+        }
+};
+
+
+GpioManager* GpioManager::instance = nullptr; //Cấp phát địa chỉ cố định cho Private Property.
+
+int main(int argc, char const *argv[])
+{
+    GpioManager* gpioManager = GpioManager::getInstace(); //Gọi hàm để khởi tạo đối tượng
+
+    gpioManager->setPin(2, 1);
+
+    gpioManager->readPin(2);
+
+    GpioManager* gpioManager2 = GpioManager::getInstace(); // Gọi hàm để khởi tạo đối tượng nhưng không thể tạo mới mà lấy địa chỉ của đối tượng trên.
+
+    return 0;
+}
+```
+
+#### Factory Pattern
+
+**Factory Pattern** là một mẫu thiết kế (design pattern) thuộc nhóm creational patterns, cung cấp một cơ chế để **tạo ra các đối tượng mà không cần chỉ rõ lớp cụ thể của các đối tượng đó**.  
+Thay vì khởi tạo trực tiếp các đối tượng, Factory Pattern sử dụng một phương thức hoặc **một lớp trung gian (Factory) để quyết định loại đối tượng nào sẽ được khởi tạo** dựa trên tham số đầu vào hoặc logic cụ thể.
+
+Các thành phần chính:
+- **Product**: Lớp cơ sở (base class) hoặc interface mà các lớp con (derived class) sẽ kế thừa.
+- **Concrete Product**: Các lớp con cụ thể được tạo ra từ Factory.
+- **Factory**: Một class hoặc hàm đảm nhiệm việc tạo ra các đối tượng.
+
+Đặc điểm:
+- **Tính trừu tượng**: Factory Pattern ẩn đi chi tiết về cách các đối tượng được tạo ra, giúp chương trình tách biệt giữa việc khởi tạo đối tượng và việc sử dụng đối tượng đó.
+- **Tính mở rộng**: Factory Pattern giúp hệ thống dễ dàng mở rộng khi cần thêm các lớp con mới mà không làm ảnh hưởng đến mã nguồn hiện có.
+- **Tính linh hoạt**: Khi hệ thống cần thay đổi hoặc thêm mới các đối tượng cụ thể, chúng ta chỉ cần cập nhật factory mà không cần sửa đổi mã nguồn chính.
+- **Giảm sự phụ thuộc**: Factory Pattern giúp mã nguồn giảm sự phụ thuộc vào các lớp cụ thể, từ đó tăng tính module và khả năng tái sử dụng.
+
+```cpp
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+// Base class
+class Sensor
+{
+    public:
+        // phương thức ảo thuần túy đọc dữ liệu cảm biến
+        virtual void readData() = 0;
+};
+
+// Concrete product: temperature
+class TemperatureSensor : public Sensor
+{
+    public:
+        // Đọc dữ liệu từ cảm biến nhiệt độ
+        void readData() override
+        {
+            cout << "reading temp data..." << endl;
+            // cấu hình, logic xử lý
+        }
+};
+
+// Concrete product: humidity
+class HumiditySensor : public Sensor
+{
+    public:
+        // Đọc dữ liệu từ cảm biến độ ẩm
+        void readData() override
+        {
+            cout << "reading humidity data..." << endl;
+        }
+};
+
+// Concrete product: pressure
+class PressureSensor : public Sensor
+{
+    public:
+        // Đọc dữ liệu từ cảm biến áp suất
+        void readData() override
+        {
+            cout << "reading pressure data..." << endl;
+        }
+};
+
+// Concrete product: light
+class LightSensor : public Sensor
+{
+    public:
+        // Đọc dữ liệu từ cảm biến áp suất
+        void readData() override
+        {
+            cout << "reading light data..." << endl;
+        }
+};
+
+// Định nghĩa các loại cảm biến
+typedef enum
+{
+    TEMPERATURE,    //0
+    PRESSURE,       //1
+    HUMIDITY,       //2
+    LIGHT           //3
+} SensorType;
+
+// Sensor Factory để tạo ra các đối tượng cảm biến
+class SensorFactory
+{
+    public:
+        // Tạo đối tượng cảm biến dựa trên loại cảm biến
+        static Sensor* createSensor(SensorType type)
+        {
+            switch (type) //Tạo switch để lựa chọn đối tượng thuộc lớp nào để khởi tạo
+            {
+                case SensorType::TEMPERATURE:
+                    return new TemperatureSensor(); // 0xc8
+
+                case SensorType::HUMIDITY:
+                    return new HumiditySensor();    // 0xa1
+
+                case SensorType::PRESSURE:
+                    return new PressureSensor();    // 0xf4
+               
+                case SensorType::LIGHT:
+                    return new LightSensor();       // 0x04
+
+                default:
+                    cout << "Invalid sensor type!\n";
+                    return nullptr;
+            }
+        }
+};
+
+int main(int argc, char const *argv[])
+{
+    Sensor* sensor1 = SensorFactory::createSensor(TEMPERATURE);
+    sensor1->readData();
+
+    auto sensor2 = SensorFactory::createSensor(PRESSURE);
+    sensor2->readData();
+
+    auto sensor3 = SensorFactory::createSensor(HUMIDITY);
+    sensor3->readData();
+
+    SensorFactory::createSensor(LIGHT)->readData();
+
+    return 0;
+}
+
+
+```
+Kết quả:
+```
+reading temp data...
+reading pressure data...
+reading humidity data...
+reading light data...
+```
+
+### Behavioral Patterns(Mẫu hành vi)
+
+#### Observer Pattern (Mẫu quan sát)
+
+Ví dụ có 1 cảm biến đọc giá trị và có các hành động kèm theo là hiển thị LCD, điều khiển bật/tắt quạt,....thì có cách nào khi đọc dữ liệu cảm biến thì tự động cập nhật giá trị cho các hành động trên không?
+
+**Observer** là một mẫu thiết kế thuộc nhóm Behavioral (mẫu hành vi), nó định nghĩa một mối quan hệ phụ thuộc **one-to-many** giữa các đối tượng, nghĩa là **khi một đối tượng thay đổi (Subject), tất cả các đối tượng phụ thuộc (Observers) vào nó sẽ được tự động thông báo và cập nhật**.
+
+![](https://i.imgur.com/cj80OeC.png)
+
+Các thành phần chính:
+- **Subject**
+	- Đối tượng giữ trạng thái và chịu trách nhiệm thông báo cho các Observer về sự thay đổi.
+	- Cung cấp phương thức để thêm, xóa, và thông báo Observer.
+- **Observer**
+	- Một interface hoặc lớp cơ sở để định nghĩa phương thức update() mà các lớp con phải triển khai.
+	- Observer sẽ thực hiện hành động khi nhận được thông báo từ Subject. Để nhận được thông báo, các Observer phải đăng ký đến Subject.
+
+- **Concrete Observer**: 
+	- Là các lớp kế thừa từ Observer, ghi đè và thực hiện phương thức update(). 
+	- Các lớp này sẽ nhận thông báo từ Subject và xử lý thông tin.
+- **Concrete Subject**
+	- Là lớp triển khai cụ thể của Subject.
+	- Chứa logic để quản lý danh sách Observer và trạng thái của Subject.
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+
+using namespace std;
+
+// Interface for observers (display, logger, etc.)
+class Observer
+{
+    public:
+        virtual void update(float temperature, float humidity, float light) = 0; // Hàm thuần ảo Update để lớp con ghi đè;
+};
+
+
+//__________CONCRETE OBSERVER_____________
+
+// Display component (an observer)
+class Display : public Observer
+{
+public:
+    void update(float temperature, float humidity, float light) override //Ghi đè hàm Update với chức năng hiển thị
+    {
+        cout << "Display: Temperature: " << temperature
+             << ", Humidity: " << humidity
+             << ", Light: " << light << endl;
+    }
+};
+
+// Logger component (an observer)
+class Logger : public Observer
+{
+public:
+    void update(float temperature, float humidity, float light) override
+    {
+        cout << "Logging data... Temp: " << temperature
+             << ", Humidity: " << humidity
+             << ", Light: " << light << endl;
+    }
+};
+
+
+
+
+// Subject (SensorManager) holds the state and notifies observers
+class SensorManager
+{
+    float temperature;
+    float humidity;
+    float light;
+    vector<Observer *> observers; //Vector lưu trữ danh sách Observer.
+
+    public:
+        void registerObserver(Observer *observer) // Thêm một thành viên Observer
+        {
+            observers.push_back(observer);
+        }
+
+        void removeObserver(Observer *observer) // Xóa một thành viên Observer
+        {
+            observers.erase(remove(observers.begin(), observers.end(), observer), observers.end());
+            /*
+                Hàm (remove(observers.begin(), observers.end(), observer) là hàm nằm trong thư viện Std
+                    Chức năng: 
+                        Duyệt qua các phần tử của vector.
+                        Tìm kiếm các Object cần xóa và sau đó chuyển chúng về cuối danh sách
+                            Ví dụ: {3,5,1,6,1,8} - Xóa giá trị 1 thông qua hàm remove thành {3,5,6,8,1,1}
+                    Đồng thời trả về một iterator trỏ đến vị trí đầu tiên của object cần xóa - tức vị trí phần tử số 1 đầu tiên
+                Hàm erase(const_iterator __first, const_iterator __last) sẽ xóa các phần tử trong khoảng địa chỉ được truyền vào.
+            */
+
+        }
+
+        void notifyObservers() //Thông báo cho Observer
+        {
+            for (auto observer : observers)
+            {
+                observer->update(temperature, humidity, light); //Duyệt qua từng Observer và gọi hàm Update để thực thi các chức năng
+            }
+        }
+
+        void setMeasurements(float temp, float hum, float lightLvl) // Hàm mô phỏng cập nhật giá trị cảm biến.
+        {
+            temperature = temp;
+            humidity = hum;
+            light = lightLvl;
+            notifyObservers();
+        }
+};
+
+
+
+int main()
+{
+    //Tạo đối tượng Subject
+    SensorManager sensorManager;
+
+    //Tạo các đối tượng Observer tương ứng với những chức năng khác nhau
+    Display displayLCD, displayOled;
+    Logger logger;
+
+    //Đăng ký displayLCD và logger làm thành viên
+    sensorManager.registerObserver(&displayLCD);
+    sensorManager.registerObserver(&logger);
+    sensorManager.registerObserver(&displayOled);
+
+    //Gọi các hàm để mô phỏng thay đổi giá trị của cảm biến
+    sensorManager.setMeasurements(25.0, 60.0, 700.0);
+    
+    //Xóa Observer displayOled.
+    sensorManager.removeObserver(&displayOled);
+
+    cout << "------------------------------ \n";
+
+    sensorManager.setMeasurements(26.0, 65.0, 800.0); // Another sensor update
+
+    return 0;
+}
+
+```
+
+Kết quả:
+```
+Display: Temperature: 25, Humidity: 60, Light: 700
+Logging data... Temp: 25, Humidity: 60, Light: 700
+Display: Temperature: 25, Humidity: 60, Light: 700
+------------------------------
+Display: Temperature: 26, Humidity: 65, Light: 800
+Logging data... Temp: 26, Humidity: 65, Light: 800
+```
+
+### 
+
+
+</details>
