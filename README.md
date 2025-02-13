@@ -6320,6 +6320,7 @@ Bây giờ ```b``` sẽ quản lý ```40``` và ```a``` sẽ quản lý ```5
 
 
 
+
 ## Bài 20: Design Patterns
 
 <details><summary>Xem</summary>  
@@ -6554,6 +6555,191 @@ reading humidity data...
 reading light data...
 ```
 
+### Structural Patterns (Mẫu cấu trúc)
+
+#### Decorator Pattern
+
+**Cho phép mở rộng một chức năng hiện có của đối tượng**
+
+Ví dụ: Khi làm việc với thiết bị ngoại vi, ví dụ như cảm biến nhiệt độ, đôi khi bạn sẽ cần thêm tính năng mới vào cảm biến này mà không muốn thay đổi mã nguồn gốc hoặc cấu trúc của nó. Chẳng hạn, cảm biến nhiệt độ ban đầu chỉ trả về giá trị nhiệt độ, nhưng bạn lại muốn:
+- Ghi lại dữ liệu nhiệt độ vào log để có thể xem lại sau này.
+- Kiểm tra xem nhiệt độ có vượt ngưỡng an toàn không.
+- Hiệu chỉnh nhiệt độ nếu cảm biến không chính xác hoàn toàn.
+Một cách phổ biến để thêm tính năng là tạo các lớp con kế thừa từ lớp cảm biến gốc, sau đó viết lại hoặc thêm tính năng mới vào từng lớp con. Tuy nhiên, nếu làm vậy, bạn sẽ phải tạo rất nhiều lớp kế thừa khác nhau, dẫn đến mã nguồn phức tạp, khó kiểm soát và bảo trì.  
+Làm thế nào để thêm các hành vi mới vào đối tượng hiện có mà không cần thay đổi cấu trúc của nó hoặc tạo ra các lớp con mới?
+
+**Decorator Pattern** là một mẫu thiết kế thuộc nhóm structural patterns, cho phép **thêm các chức năng hoặc hành vi mới cho một đối tượng mà không cần thay đổi cấu trúc của lớp đối tượng đó**. Mẫu này giúp mở rộng tính năng của các đối tượng bằng cách bao bọc (wrapping) chúng trong các lớp decorator đặc biệt.
+
+
+Các thành phần chính:
+- **Component**: Định nghĩa giao diện (interface) chung cho các đối tượng mà Decorator và đối tượng thực tế (Concrete Component) đều tuân theo.
+- **Concrete Component**: Lớp triển khai cụ thể của Component. Đây là đối tượng gốc cần được thêm chức năng (decorated).
+- **Decorator**: 
+    - Lớp cơ sở trừu tượng cho tất cả các Decorator. Nó chứa một tham chiếu tới một Component (thường là con trỏ hoặc đối tượng).
+    - Thực hiện ủy quyền (delegation) để gọi các phương thức từ Component.
+- **Concrete Decorator**: Các lớp cụ thể kế thừa từ Decorator để thêm chức năng mới cho Component.
+
+Đặc điểm:
+- Tính linh hoạt: Decorator Pattern cho phép thêm hành vi mới vào đối tượng một cách linh hoạt mà không làm thay đổi các đối tượng khác.
+- Tính mở rộng: Decorator Pattern cho phép mở rộng tính năng mà không cần thay đổi mã gốc.
+- Dễ bảo trì: Bạn có thể dễ dàng bổ sung hoặc thay thế các tính năng bằng cách thay đổi các decorator mà không ảnh hưởng đến các lớp khác.
+- Giảm sự phức tạp của kế thừa: Thay vì tạo ra nhiều lớp con để mở rộng hành vi, Decorator Pattern cho phép kết hợp các hành vi một cách linh hoạt bằng cách xếp chồng các decorator.
+
+```cpp
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class Shape
+{
+    protected:
+        string color;
+
+    public:
+        Shape(const string &color_ = "black") : color(color_) {} //Constructor khởi tạo màu sắc
+
+        virtual void draw() const
+        {
+            cout << "Drawing a generic shape" << endl;
+        }
+
+        virtual double calculateArea() const
+        {
+            return 0.0;
+        }
+};
+
+// Đối tượng được khởi tạo ban dầu
+class Circle : public Shape
+{
+    private:
+        double radius;
+
+    public:
+        Circle(double r, const string &color_ = "black")//Constructor khởi tạo kích thước và màu sắc
+            : radius(r), Shape(color_) {}
+
+        void draw() const override //Ghi đè hàm draw()
+        {
+            cout << "Drawing a Circle in color " << color << endl;
+        }
+
+        double calculateArea() const override //Ghi đè hàm calculateArea()
+        {
+            return 3.14 * radius * radius;
+        }
+};
+
+
+//
+class ShapeDecorator : public Shape
+{
+    protected:
+        Shape *decoratedShape; //Con trỏ quản lý đối tượng 
+
+    public:
+        ShapeDecorator(Shape *shape) : decoratedShape(shape){} //Truyền đối tượng cần thêm chức năng vào
+
+        virtual void draw() const override
+        {
+            decoratedShape->draw();
+        }
+
+        virtual double calculateArea() const override
+        {
+            return decoratedShape->calculateArea();
+        }
+};
+
+//Thêm chức năng vẽ viền
+class BorderDecorator : public ShapeDecorator
+{
+    private:
+        double borderWidth;
+
+    public:
+        BorderDecorator(Shape *shape, double width)//Truyền vào đối tượng cần thêm chức năng và độ dài viền 
+            : ShapeDecorator(shape), borderWidth(width) {}
+
+        void draw() const override
+        {
+            decoratedShape->draw();//Gọi chức năng gốc của hàm Circle->draw()
+            cout << "   with border width of " << borderWidth << endl; //Thêm vào chức năng mới.
+        }
+};
+
+
+//Thêm chức năng vẽ bóng
+class ShadowDecorator : public ShapeDecorator
+{
+    private:
+        string shadowColor;
+
+    public:
+        ShadowDecorator(Shape *shape, const string &color) //Truyền vào đối tượng cần thêm chức năng và màu bóng
+            : ShapeDecorator(shape), shadowColor(color) {}
+
+        void draw() const override
+        {
+            decoratedShape->draw();
+            cout << "   with shadow color " << shadowColor << endl; //Thêm chức năng vẽ bóng
+        }
+};
+
+
+int main(int argc, char const *argv[])
+{
+    Shape *shape = new Circle(5, "red");  //shape = 0x01
+
+    shape = new ShadowDecorator(shape, "yellow"); //shape = 0xb2
+
+    /*
+        Khi khởi tạo đối tượng Circle, giả sử shape đang quản lý địa chỉ 0x01, chỉ có chức năng vẽ hình và tô màu
+        Khi khởi tạo đối tượng ShadowDecorator và truyền vào:
+            - Màu sắc bóng shadowColor(color)
+            - Địa chỉ của shape = 0x01,  và gọi Constructor ShapeDecorator(shape)
+                Bây giờ ta có decoratedShape = shape tức biến  decoratedShape = 0x01
+            Nên khi gọi hàm draw() tại 0xb2
+                decoratedShape->draw(); //Gọi hàm draw tại địa chỉ 0x01 trước, tức là hàm shape->draw()
+                Sau đó gọi thêm hàm chức năng vẽ bóng
+
+        Tức shape bây giờ đang quản lý địa chỉ 0xb2 nhưng con trỏ decoratedShape = 0x01.
+    */
+
+    shape = new BorderDecorator(shape, 2);              // 0xc3
+
+    /*
+        Khi khởi tạo đối tượng ShadowDecorator và truyền vào:
+            - Độ dài borderWidth(width)
+            - Địa chỉ của shape = 0xb2 lúc này đã có chức năng vẽ bóng, ShapeDecorator(shape)
+                Bây giờ ta có decoratedShape = 0xb2 tức biến decoratedShape = 0xb2
+            Nên khi gọi hàm draw()
+                decoratedShape->draw(); //Gọi hàm draw tại địa chỉ 0xb2 trước, đã có chức năng vẽ bóng
+                trong hàm draw() tại 0xb2 tiếp tục thực hiện một hàm decoratedShape->draw() tại 0x01 là hàm ban đầu
+                Sau đó gọi thêm hàm chức năng vẽ viền
+
+        Lúc này ta đã có xếp chồng ba hàm bằng cách, gọi con trỏ 0xc3 -> 0xb2 -> 0x01
+    */
+
+    shape->draw();
+
+    cout << "Area: " << shape->calculateArea() << endl;
+
+    delete shape;
+
+    return 0;
+}
+
+```
+
+Kết quả:
+```
+Drawing a Circle in color red
+   with shadow color yellow
+   with border width of 2
+Area: 78.5
+```
 ### Behavioral Patterns(Mẫu hành vi)
 
 #### Observer Pattern (Mẫu quan sát)
@@ -6711,7 +6897,27 @@ Display: Temperature: 26, Humidity: 65, Light: 800
 Logging data... Temp: 26, Humidity: 65, Light: 800
 ```
 
-### 
+#### MVP Pattern
 
+Giả sử bạn phát triển một ứng dụng nhúng đơn giản cho màn hình cảm ứng để điều khiển thiết bị, trong đó giao diện người dùng (UI) bao gồm các nút điều khiển thiết bị và logic điều khiển trực tiếp được viết chung với giao diện.   
+Vì thế, khi bạn cần thay đổi cách giao diện hiển thị hoặc cách thiết bị phản ứng với lệnh, bạn phải sửa cả mã giao diện lẫn mã điều khiển. Điều này có thể dễ gây lỗi, đặc biệt khi dự án lớn lên, vì các thành phần logic và giao diện không được tách biệt rõ ràng. Làm sao để khắc phục?
+
+**MVP (Model - View - Presenter)** là một mẫu thiết kế thuộc nhóm Behavioral, phổ biến trong lập trình giao diện người dùng (UI) và phát triển ứng dụng. **MVP tách biệt các thành phần của ứng dụng thành ba phần chính: Model, View, và Presenter**. Cấu trúc này giúp dễ dàng quản lý, kiểm thử, và bảo trì mã nguồn.
+
+- **Model**: Chứa logic liên quan đến dữ liệu của ứng dụng, bao gồm các đối tượng, cơ sở dữ liệu, và giao tiếp với các API khác.
+- **View**: Hiển thị giao diện (Interface) và nhận tương tác từ người dùng (như nhập liệu, bấm nút). 
+- **Presenter**: Là cầu nối giữa Model và View, chịu trách nhiệm xử lý logic, điều phối dữ liệu từ Model đến View và ngược lại.
+
+Đặc điểm của MVP Pattern:
+- Tách biệt logic và giao diện: Presenter chứa logic của ứng dụng, giúp View chỉ tập trung vào hiển thị.
+- Presenter không biết đến giao diện cụ thể: Presenter chỉ tương tác với View thông qua một interface, giúp việc kiểm thử và thay đổi giao diện trở nên dễ dàng.
+- Thích hợp cho ứng dụng có giao diện phức tạp: MVP rất hữu ích khi giao diện cần tương tác với nhiều dữ liệu và các thành phần phức tạp.
+
+**Luồng hoạt động của MVP Pattern**
+- Người dùng tương tác với giao diện người dùng (View).
+- View chuyển sự kiện này cho Presenter.
+- Presenter xử lý yêu cầu bằng cách lấy dữ liệu từ Model.
+- Model xử lý dữ liệu và trả về kết quả cho Presenter.
+- Presenter tiếp tục cập nhật View với dữ liệu đã xử lý từ Model.
 
 </details>
